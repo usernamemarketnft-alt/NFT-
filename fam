@@ -1,0 +1,1861 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>هكر التوصيات — تحليل الذهب والبيتكوين</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap');
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding-bottom: 40px; color: #EDEBE6; font-family: 'Inter', sans-serif;
+    background:
+      radial-gradient(ellipse 700px 380px at 50% -60px, rgba(201,165,68,0.14), transparent 65%),
+      #08090B;
+  }
+  .display { font-family: 'Space Grotesk', sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  .header {
+    border-bottom: 1px solid #1C1B14; padding: 16px 20px;
+    display: flex; align-items: center; gap: 10px;
+    background: linear-gradient(180deg, rgba(201,165,68,0.05), transparent);
+  }
+  .logo {
+    width: 34px; height: 34px; border-radius: 10px;
+    background: linear-gradient(135deg, #E8C468, #8A6D1F);
+    display: flex; align-items: center; justify-content: center;
+    color: #0A0B0D; font-weight: 700; font-size: 16px;
+    box-shadow: 0 0 0 1px rgba(232,196,104,0.25), 0 4px 12px -4px rgba(201,165,68,0.5);
+  }
+  .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+  .card {
+    position: relative; overflow: hidden;
+    border: 1px solid #241F14; background: linear-gradient(165deg, #131110 0%, #0D0C0B 100%);
+    border-radius: 16px; padding: 18px 18px 18px 21px; margin-bottom: 16px;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 10px 24px -16px rgba(0,0,0,0.7);
+  }
+  .card::before {
+    content: ''; position: absolute; top: 0; bottom: 0; right: 0; width: 3px;
+    background: linear-gradient(180deg, #E8C468, #8A6D1F 60%, transparent);
+    opacity: 0.85;
+  }
+  .tabs { display: flex; gap: 8px; margin-bottom: 16px; padding: 4px; background: #0D0C0A; border: 1px solid #201C12; border-radius: 14px; }
+  .tab-btn {
+    flex: 1; background: transparent; border: 1px solid transparent; color: #75726A;
+    border-radius: 11px; padding: 11px; font-size: 14px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+  .tab-btn.active-gold { background: linear-gradient(135deg, rgba(232,196,104,0.16), rgba(138,109,31,0.08)); border-color: rgba(201,165,68,0.4); color: #E8C468; box-shadow: 0 2px 8px -2px rgba(201,165,68,0.25); }
+  .tab-btn.active-btc { background: linear-gradient(135deg, rgba(201,150,46,0.16), rgba(92,64,20,0.08)); border-color: rgba(201,150,46,0.4); color: #D9A94A; box-shadow: 0 2px 8px -2px rgba(201,150,46,0.25); }
+  .mode-tabs { display: flex; gap: 8px; margin-bottom: 16px; padding: 4px; background: #0D0C0A; border: 1px solid #201C12; border-radius: 12px; }
+  .mode-btn {
+    flex: 1; background: transparent; border: 1px solid transparent; color: #75726A;
+    border-radius: 9px; padding: 9px; font-size: 13px; font-weight: 600; cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+  .mode-btn.active { background: linear-gradient(135deg, rgba(201,150,46,0.18), rgba(92,64,20,0.08)); border-color: rgba(201,150,46,0.4); color: #E8C468; }
+  .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .input-wrap {
+    flex: 1; min-width: 220px; display: flex; align-items: center; gap: 8px;
+    background: #0B0A08; border: 1px solid #23200F; border-radius: 10px; padding: 10px 12px;
+  }
+  input[type=text] {
+    background: transparent; border: none; outline: none; color: #EDEBE6;
+    font-family: 'IBM Plex Mono', monospace; font-size: 14px; width: 100%; direction: ltr;
+  }
+  select {
+    background: #0B0A08; border: 1px solid #23200F; border-radius: 10px;
+    color: #EDEBE6; padding: 10px 12px; font-family: 'IBM Plex Mono', monospace; font-size: 14px;
+  }
+  button {
+    background: linear-gradient(135deg, #EFD48B, #C9A544 55%, #9C7C2E);
+    color: #16130A; border: none; border-radius: 10px;
+    padding: 10px 18px; font-weight: 700; font-size: 14px; cursor: pointer;
+    display: flex; align-items: center; gap: 8px; letter-spacing: 0.01em;
+    box-shadow: 0 3px 10px -3px rgba(201,165,68,0.55), 0 1px 0 rgba(255,255,255,0.25) inset;
+  }
+  button:active { filter: brightness(0.94); }
+  button:disabled { opacity: 0.55; box-shadow: none; }
+  .error {
+    border: 1px solid rgba(248,113,113,0.3); background: rgba(248,113,113,0.1);
+    color: #FCA5A5; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; font-size: 14px;
+  }
+  .empty {
+    border: 1px dashed #2A2416; border-radius: 14px; text-align: center;
+    padding: 60px 20px; color: #6B6E74; font-size: 14px; background: rgba(201,165,68,0.02);
+  }
+  .grid2 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .grid4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 12px; }
+  @media (max-width: 720px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+  .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: #A39A7E; font-weight: 600; }
+  .price-big {
+    font-family: 'IBM Plex Mono', monospace; font-size: 36px; font-weight: 600; margin-top: 4px;
+    background: linear-gradient(135deg, #F3DDA0, #C9A544); -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px; border-radius: 8px;
+    padding: 4px 11px; font-size: 11px; font-weight: 600; border: 1px solid;
+  }
+  .bull { color: #34D399; border-color: rgba(52,211,153,0.3); background: rgba(52,211,153,0.1); }
+  .bear { color: #F87171; border-color: rgba(248,113,113,0.3); background: rgba(248,113,113,0.1); }
+  .neutral { color: #A1A1AA; border-color: rgba(161,161,170,0.3); background: rgba(161,161,170,0.1); }
+  .ind-card {
+    position: relative; border: 1px solid #201C12; background: #0C0B09; border-radius: 12px; padding: 14px 14px 14px 16px;
+  }
+  .ind-card::before {
+    content: ''; position: absolute; top: 10px; bottom: 10px; right: 0; width: 2px;
+    background: rgba(201,165,68,0.35); border-radius: 2px;
+  }
+  .ind-value { font-family: 'IBM Plex Mono', monospace; font-size: 22px; margin-top: 6px; }
+  .ind-sub { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #8A8D93; margin-top: 2px; }
+  .ind-desc { font-size: 11px; color: #6B6E74; margin-top: 6px; line-height: 1.4; }
+  .fib-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(90px,1fr)); gap: 8px; }
+  .fib-item { border: 1px solid #201C12; background: #0C0B09; border-radius: 10px; padding: 8px; text-align: center; }
+  .fib-near { border-color: #C9A544; background: rgba(201,165,68,0.12); box-shadow: 0 0 0 1px rgba(201,165,68,0.25) inset; }
+  .piv-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(80px,1fr)); gap: 8px; }
+  .piv-item { border: 1px solid #201C12; background: #0C0B09; border-radius: 10px; padding: 8px; text-align: center; }
+  .fund-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 600px) { .fund-grid { grid-template-columns: 1fr; } }
+  .fund-item { border: 1px solid #201C12; background: #0C0B09; border-radius: 10px; padding: 10px; font-size: 13px; }
+  .fund-title { font-weight: 600; margin-bottom: 4px; color: #D9CBA3; }
+  .fund-desc { color: #8A8D93; font-size: 12px; line-height: 1.4; }
+  .chart-wrap { position: relative; height: 220px; }
+  .mini-wrap { position: relative; height: 110px; }
+  .legend { display: flex; gap: 14px; font-size: 11px; color: #8A8D93; font-family: 'IBM Plex Mono', monospace; margin-top: 8px; flex-wrap: wrap; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-left: 4px; }
+  .footnote { font-size: 11px; color: #52555B; text-align: center; margin-top: 8px; }
+  .spin { animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .section-title {
+    display:flex; align-items:center; gap:8px; margin-bottom:12px; padding-bottom:9px;
+    border-bottom: 1px solid #221D12;
+  }
+  .section-title .label { color: #E8C468; font-size: 12px; }
+
+  /* ---- intro splash ---- */
+  #introScreen {
+    position: fixed; inset: 0; z-index: 9999;
+    background: radial-gradient(ellipse at center, #0B1220 0%, #05060A 70%);
+    display: flex; align-items: center; justify-content: center; flex-direction: column;
+    transition: opacity 1s ease, visibility 1s ease; overflow: hidden;
+  }
+  #introScreen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+  .intro-content { position: relative; z-index: 2; text-align: center; padding: 20px; }
+  .intro-logo-ring {
+    width: 72px; height: 72px; margin: 0 auto 18px; border-radius: 50%;
+    border: 1px solid rgba(201,165,68,0.35);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; animation: introFadeScale 1.1s cubic-bezier(.2,.7,.3,1) forwards 0.15s;
+  }
+  .intro-logo-ring span { font-size: 26px; }
+  .intro-title {
+    font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 24px;
+    color: #EAF2FF; letter-spacing: 0.04em;
+    text-shadow: 0 0 18px rgba(184,134,46,0.35);
+    opacity: 0; animation: introFadeScale 1.1s cubic-bezier(.2,.7,.3,1) forwards 0.35s;
+  }
+  .intro-sub {
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #5C7599; margin-top: 12px;
+    opacity: 0; animation: introFadeUp 1s ease forwards 0.9s;
+  }
+  .intro-bar {
+    width: 120px; height: 1.5px; background: rgba(201,165,68,0.12); margin: 26px auto 0; border-radius: 2px; overflow: hidden;
+    opacity: 0; animation: introFadeUp 0.8s ease forwards 1.1s;
+  }
+  .intro-bar-fill {
+    height: 100%; width: 0%; background: linear-gradient(90deg, rgba(184,134,46,0.4), #D9B85A, rgba(184,134,46,0.4));
+    animation: introLoad 2.4s ease-in-out forwards 1.1s;
+  }
+  .intro-skip {
+    position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 2;
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #3E4657;
+    background: transparent; border: none; padding: 6px 16px;
+    opacity: 0; animation: introFadeUp 0.8s ease forwards 1.6s;
+  }
+  @keyframes introFadeScale { from { opacity:0; transform: scale(0.92); } to { opacity:1; transform: scale(1); } }
+  @keyframes introFadeUp { from { opacity:0; transform: translateY(5px); } to { opacity:1; transform: translateY(0); } }
+  @keyframes introLoad { from { width:0%; } to { width:100%; } }
+</style>
+</head>
+<body>
+
+<div id="introScreen">
+  <div class="intro-content">
+    <div class="intro-logo-ring"><span>🎯</span></div>
+    <div class="intro-title">هكر التوصيات</div>
+    <div class="intro-sub">للاشتراك: yy00y0y (معرف تيليجرام)</div>
+    <div class="intro-bar"><div class="intro-bar-fill"></div></div>
+  </div>
+  <button class="intro-skip" onclick="dismissIntro(); toggleMusic();">تخطي</button>
+</div>
+
+
+<div class="header" style="flex-direction:column; align-items:center; text-align:center; gap:2px; padding:20px 20px 14px; position:relative;">
+  <button id="musicToggle" onclick="toggleMusic()" style="position:absolute; left:16px; top:16px; width:32px; height:32px; border-radius:50%; background:#14120C; border:1px solid #2A2416; color:#C9A544; font-size:13px; padding:0; display:flex; align-items:center; justify-content:center;">🔇</button>
+  <div class="display" style="font-weight:700; font-size:22px; letter-spacing:0.02em; background:linear-gradient(135deg,#E8C468,#C9962E); -webkit-background-clip:text; background-clip:text; color:transparent;">🎯 هكر التوصيات</div>
+  <div class="mono" style="font-size:11px; color:#6B6E74; margin-top:4px;">للاشتراك: yy00y0y (معرف تيليجرام)</div>
+</div>
+
+<div class="header">
+  <div class="logo" id="headerLogo">$</div>
+  <div>
+    <div class="display" style="font-weight:600; font-size:14px;" id="headerTitle">TRADE DESK</div>
+    <div class="mono" style="font-size:10px; color:#6B6E74;" id="headerSub">XAU/USD · تحليل فني</div>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="tabs">
+    <button class="tab-btn active-gold" id="tabGold" onclick="switchAsset('XAU')">🥇 الذهب</button>
+    <button class="tab-btn" id="tabBtc" onclick="switchAsset('BTC')">₿ بيتكوين</button>
+  </div>
+
+  <div class="mode-tabs">
+    <button class="mode-btn active" id="modeSwing" onclick="switchMode('swing')">📈 سوينج (يومي/ساعات)</button>
+    <button class="mode-btn" id="modeScalp" onclick="switchMode('scalp')">⚡ سكالب (دقايق)</button>
+  </div>
+
+  <div class="card controls">
+    <div class="input-wrap">
+      🔑 <input type="text" id="apiKey" placeholder="الصق API key من Twelve Data هنا">
+    </div>
+    <select id="interval">
+      <option value="1day">يومي</option>
+      <option value="4h">4 ساعات</option>
+      <option value="1h">ساعة</option>
+      <option value="30min">30 دقيقة</option>
+      <option value="15min">15 دقيقة</option>
+      <option value="5min">5 دقايق</option>
+      <option value="1min">دقيقة</option>
+    </select>
+    <button id="fetchBtn" onclick="runAnalysis()">
+      <span id="btnIcon">↻</span> <span id="btnText">جيب تحليل الذهب</span>
+    </button>
+  </div>
+
+  <div id="errorBox"></div>
+
+  <div class="card">
+    <div class="label" style="margin-bottom:10px;">🔔 تنبيهات تيليجرام التلقائية (فريم 1 دقيقة)</div>
+    <div class="controls" style="margin-bottom:10px;">
+      <div class="input-wrap">
+        🤖 <input type="text" id="tgToken" placeholder="Bot Token (من BotFather)" value="8754051154:AAED6LVKKFMBTMgOhSGhhL4j6LImbtRCNp8">
+      </div>
+      <div class="input-wrap" style="min-width:140px;">
+        💬 <input type="text" id="tgChatId" placeholder="Chat ID">
+      </div>
+    </div>
+    <div class="controls">
+      <select id="tgAsset">
+        <option value="XAU">🥇 الذهب</option>
+        <option value="BTC">₿ بيتكوين</option>
+        <option value="BOTH">الاثنين</option>
+      </select>
+      <select id="tgInterval">
+        <option value="180000">كل 3 دقايق</option>
+        <option value="300000">كل 5 دقايق</option>
+        <option value="120000">كل دقيقتين</option>
+      </select>
+      <select id="tgMinConfidence">
+        <option value="strong">قوية فأعلى</option>
+        <option value="verystrong">قوية جداً بس</option>
+      </select>
+      <button id="tgToggleBtn" onclick="toggleTelegramWatch()">▶ تشغيل المراقبة</button>
+    </div>
+    <div id="tgStatus" class="footnote" style="margin-top:8px;">المراقبة متوقفة. تحتاج تسوي بوت من @BotFather وتاخذ الـ Token، وترسل أي رسالة للبوت مرة وحدة حتى تحصل الـ Chat ID (تقدر تستخدم بوت زي @userinfobot لو تحتاج طريقة أسهل تعرف بيها Chat ID).</div>
+    <div class="footnote" style="margin-top:4px;">⚠️ يشتغل بس إذا هذي الصفحة فاتحة بمتصفحك (حتى لو بالخلفية) — لو سكرتها تتوقف المراقبة.</div>
+  </div>
+
+  <div id="content">
+    <div class="empty">دخّل API key واضغط "جيب التحليل" حتى تشوف كل المؤشرات</div>
+  </div>
+</div>
+
+<script>
+// ---------- indicator math ----------
+function sma(values, period) {
+  const out = new Array(values.length).fill(null);
+  let sum = 0;
+  for (let i = 0; i < values.length; i++) {
+    sum += values[i];
+    if (i >= period) sum -= values[i - period];
+    if (i >= period - 1) out[i] = sum / period;
+  }
+  return out;
+}
+function ema(values, period) {
+  const out = new Array(values.length).fill(null);
+  const k = 2 / (period + 1);
+  let prev = null;
+  const firstValidIdx = values.findIndex(v => v != null);
+  if (firstValidIdx === -1) return out;
+  for (let i = firstValidIdx; i < values.length; i++) {
+    if (values[i] == null) { prev = null; continue; } // gap in data resets seeding — never treat missing as 0
+    if (prev == null) {
+      if (i - firstValidIdx >= period - 1) {
+        const slice = values.slice(i - period + 1, i + 1);
+        if (slice.every(v => v != null)) {
+          prev = slice.reduce((a,b)=>a+b,0) / period;
+          out[i] = prev;
+        }
+      }
+    } else {
+      prev = values[i]*k + prev*(1-k);
+      out[i] = prev;
+    }
+  }
+  return out;
+}
+// null-safe SMA — unlike sma(), never coerces a missing value to 0; only computes once a full clean window exists
+function smaSafe(values, period) {
+  const out = new Array(values.length).fill(null);
+  for (let i = period-1; i < values.length; i++) {
+    let ok = true, sum = 0;
+    for (let j=i-period+1; j<=i; j++) { if (values[j]==null) { ok=false; break; } sum += values[j]; }
+    if (ok) out[i] = sum / period;
+  }
+  return out;
+}
+function macdCalc(closes) {
+  const ema12 = ema(closes,12), ema26 = ema(closes,26);
+  const macdLine = closes.map((_,i)=> ema12[i]!=null && ema26[i]!=null ? ema12[i]-ema26[i] : null);
+  const signal = ema(macdLine, 9); // ema() is null-safe now — no more zero-padding of the missing prefix
+  const hist = macdLine.map((v,i)=> v!=null && signal[i]!=null ? v-signal[i] : null);
+  return { macdLine, signal, hist };
+}
+function rsiCalc(closes, period=14) {
+  const out = new Array(closes.length).fill(null);
+  let avgGain=0, avgLoss=0;
+  for (let i=1;i<closes.length;i++) {
+    const change = closes[i]-closes[i-1];
+    const gain = change>0?change:0, loss = change<0?-change:0;
+    if (i<=period) {
+      avgGain+=gain; avgLoss+=loss;
+      if (i===period) { avgGain/=period; avgLoss/=period; out[i]= avgLoss===0?100:100-100/(1+avgGain/avgLoss); }
+    } else {
+      avgGain = (avgGain*(period-1)+gain)/period;
+      avgLoss = (avgLoss*(period-1)+loss)/period;
+      out[i] = avgLoss===0?100:100-100/(1+avgGain/avgLoss);
+    }
+  }
+  return out;
+}
+function stochasticCalc(highs, lows, closes, period=14, dPeriod=3, slowing=3) {
+  const rawK = new Array(closes.length).fill(null);
+  for (let i=period-1;i<closes.length;i++) {
+    const hh = Math.max(...highs.slice(i-period+1,i+1));
+    const ll = Math.min(...lows.slice(i-period+1,i+1));
+    rawK[i] = hh===ll?50:((closes[i]-ll)/(hh-ll))*100;
+  }
+  const slowK = smaSafe(rawK, slowing);   // null-safe — no zero-padding of the missing prefix
+  const slowD = smaSafe(slowK, dPeriod);
+  return { k: slowK, d: slowD };
+}
+function bollingerCalc(closes, period=20, mult=2) {
+  const mid = sma(closes, period);
+  const upper = new Array(closes.length).fill(null), lower = new Array(closes.length).fill(null);
+  for (let i=period-1;i<closes.length;i++) {
+    const slice = closes.slice(i-period+1,i+1);
+    const mean = mid[i];
+    const variance = slice.reduce((a,b)=>a+(b-mean)**2,0)/period;
+    const sd = Math.sqrt(variance);
+    upper[i]=mean+mult*sd; lower[i]=mean-mult*sd;
+  }
+  return { mid, upper, lower };
+}
+function atrCalc(highs, lows, closes, period=14) {
+  const tr = new Array(closes.length).fill(null);
+  for (let i=0;i<closes.length;i++) {
+    if (i===0) { tr[i]=highs[i]-lows[i]; continue; }
+    tr[i] = Math.max(highs[i]-lows[i], Math.abs(highs[i]-closes[i-1]), Math.abs(lows[i]-closes[i-1]));
+  }
+  const out = new Array(closes.length).fill(null);
+  let prevAtr=null;
+  for (let i=0;i<tr.length;i++) {
+    if (i===period-1) { prevAtr = tr.slice(0,period).reduce((a,b)=>a+b,0)/period; out[i]=prevAtr; }
+    else if (i>=period) { prevAtr = (prevAtr*(period-1)+tr[i])/period; out[i]=prevAtr; }
+  }
+  return out;
+}
+function fibLevels(highs, lows, lookback=90) {
+  const h = highs.slice(-lookback), l = lows.slice(-lookback);
+  const swingHigh = Math.max(...h), swingLow = Math.min(...l);
+  const diff = swingHigh - swingLow;
+  return [0,0.236,0.382,0.5,0.618,0.786,1].map(r=>({ ratio:r, price: swingHigh - diff*r }));
+}
+// ADX / +DI / -DI (Wilder)
+function adxCalc(highs, lows, closes, period=14) {
+  const n = closes.length;
+  const plusDM = new Array(n).fill(0), minusDM = new Array(n).fill(0), tr = new Array(n).fill(0);
+  for (let i=1;i<n;i++) {
+    const upMove = highs[i]-highs[i-1], downMove = lows[i-1]-lows[i];
+    plusDM[i] = (upMove>downMove && upMove>0) ? upMove : 0;
+    minusDM[i] = (downMove>upMove && downMove>0) ? downMove : 0;
+    tr[i] = Math.max(highs[i]-lows[i], Math.abs(highs[i]-closes[i-1]), Math.abs(lows[i]-closes[i-1]));
+  }
+  const smooth = (arr) => {
+    const out = new Array(n).fill(null);
+    let sum = 0;
+    for (let i=1;i<=period;i++) sum += arr[i] || 0;
+    out[period] = sum;
+    for (let i=period+1;i<n;i++) out[i] = out[i-1] - (out[i-1]/period) + arr[i];
+    return out;
+  };
+  const trS = smooth(tr), plusDMS = smooth(plusDM), minusDMS = smooth(minusDM);
+  const plusDI = new Array(n).fill(null), minusDI = new Array(n).fill(null), dx = new Array(n).fill(null);
+  for (let i=period;i<n;i++) {
+    if (trS[i]) {
+      plusDI[i] = 100*(plusDMS[i]/trS[i]);
+      minusDI[i] = 100*(minusDMS[i]/trS[i]);
+      const sum = plusDI[i]+minusDI[i];
+      dx[i] = sum ? 100*Math.abs(plusDI[i]-minusDI[i])/sum : 0;
+    }
+  }
+  const adx = new Array(n).fill(null);
+  let firstAdxIdx = period*2;
+  if (firstAdxIdx < n) {
+    let sum = 0;
+    for (let i=period;i<firstAdxIdx;i++) sum += dx[i] || 0;
+    adx[firstAdxIdx-1] = sum/period;
+    for (let i=firstAdxIdx;i<n;i++) adx[i] = ((adx[i-1]*(period-1)) + (dx[i]||0)) / period;
+  }
+  return { adx, plusDI, minusDI };
+}
+// Parabolic SAR
+function parabolicSarCalc(highs, lows, step=0.02, maxStep=0.2) {
+  const n = highs.length;
+  const sar = new Array(n).fill(null);
+  if (n < 3) return sar;
+  let isUp = highs[1] >= highs[0];
+  let af = step;
+  let ep = isUp ? highs[0] : lows[0];
+  let cur = isUp ? lows[0] : highs[0];
+  sar[0] = cur;
+  for (let i=1;i<n;i++) {
+    cur = cur + af*(ep-cur);
+    if (isUp) {
+      cur = Math.min(cur, lows[i-1], i>=2?lows[i-2]:lows[i-1]);
+      if (lows[i] < cur) {
+        isUp = false; cur = ep; af = step; ep = lows[i];
+      } else {
+        if (highs[i] > ep) { ep = highs[i]; af = Math.min(af+step, maxStep); }
+      }
+    } else {
+      cur = Math.max(cur, highs[i-1], i>=2?highs[i-2]:highs[i-1]);
+      if (highs[i] > cur) {
+        isUp = true; cur = ep; af = step; ep = highs[i];
+      } else {
+        if (lows[i] < ep) { ep = lows[i]; af = Math.min(af+step, maxStep); }
+      }
+    }
+    sar[i] = cur;
+  }
+  return sar;
+}
+// Ichimoku (Tenkan-sen / Kijun-sen / Senkou Span A & B) — current values, no forward displacement
+function ichimokuCalc(highs, lows, tenkanP=9, kijunP=26, senkouBP=52) {
+  const n = highs.length;
+  const mid = (arrH, arrL, i, p) => {
+    if (i < p-1) return null;
+    const hh = Math.max(...arrH.slice(i-p+1, i+1));
+    const ll = Math.min(...arrL.slice(i-p+1, i+1));
+    return (hh+ll)/2;
+  };
+  const tenkan = new Array(n).fill(null), kijun = new Array(n).fill(null);
+  const senkouA = new Array(n).fill(null), senkouB = new Array(n).fill(null);
+  for (let i=0;i<n;i++) {
+    tenkan[i] = mid(highs, lows, i, tenkanP);
+    kijun[i] = mid(highs, lows, i, kijunP);
+    senkouB[i] = mid(highs, lows, i, senkouBP);
+    senkouA[i] = (tenkan[i]!=null && kijun[i]!=null) ? (tenkan[i]+kijun[i])/2 : null;
+  }
+  return { tenkan, kijun, senkouA, senkouB };
+}
+// OBV (On-Balance Volume)
+function obvCalc(closes, volumes) {
+  const n = closes.length;
+  const hasVolume = volumes.some(v=>v>0);
+  const out = new Array(n).fill(0);
+  for (let i=1;i<n;i++) {
+    const vol = hasVolume ? volumes[i] : 1;
+    if (closes[i] > closes[i-1]) out[i] = out[i-1] + vol;
+    else if (closes[i] < closes[i-1]) out[i] = out[i-1] - vol;
+    else out[i] = out[i-1];
+  }
+  return { obv: out, hasVolume };
+}
+// Rate of Change
+function rocCalc(closes, period=12) {
+  const out = new Array(closes.length).fill(null);
+  for (let i=period;i<closes.length;i++) {
+    out[i] = closes[i-period] ? ((closes[i]-closes[i-period])/closes[i-period])*100 : null;
+  }
+  return out;
+}
+// Williams %R
+function williamsRCalc(highs, lows, closes, period=14) {
+  const out = new Array(closes.length).fill(null);
+  for (let i=period-1;i<closes.length;i++) {
+    const hh = Math.max(...highs.slice(i-period+1,i+1));
+    const ll = Math.min(...lows.slice(i-period+1,i+1));
+    out[i] = hh===ll ? -50 : ((hh-closes[i])/(hh-ll)) * -100;
+  }
+  return out;
+}
+// CCI
+function cciCalc(highs, lows, closes, period=20) {
+  const n = closes.length;
+  const tp = highs.map((h,i)=> (h+lows[i]+closes[i])/3);
+  const tpSma = sma(tp, period);
+  const out = new Array(n).fill(null);
+  for (let i=period-1;i<n;i++) {
+    const slice = tp.slice(i-period+1, i+1);
+    const mean = tpSma[i];
+    const meanDev = slice.reduce((a,b)=>a+Math.abs(b-mean),0)/period;
+    out[i] = meanDev===0 ? 0 : (tp[i]-mean)/(0.015*meanDev);
+  }
+  return out;
+}
+// Classic pivot points, based on the last fully-closed bar
+function pivotPoints(prevHigh, prevLow, prevClose) {
+  const pp = (prevHigh+prevLow+prevClose)/3;
+  const r1 = 2*pp - prevLow, s1 = 2*pp - prevHigh;
+  const r2 = pp + (prevHigh-prevLow), s2 = pp - (prevHigh-prevLow);
+  const r3 = prevHigh + 2*(pp-prevLow), s3 = prevLow - 2*(prevHigh-pp);
+  return { pp, r1, r2, r3, s1, s2, s3 };
+}
+// VWAP, reset each calendar day (uses the date portion of the datetime string)
+function vwapCalc(dates, highs, lows, closes, volumes) {
+  const n = closes.length;
+  const out = new Array(n).fill(null);
+  let cumPV = 0, cumVol = 0, curDay = null;
+  let hasVolume = volumes.some(v => v > 0);
+  for (let i=0;i<n;i++) {
+    const day = dates[i].slice(0,10);
+    if (day !== curDay) { cumPV = 0; cumVol = 0; curDay = day; }
+    const tp = (highs[i]+lows[i]+closes[i])/3;
+    const vol = hasVolume ? (volumes[i] || 0) : 1; // fallback: equal-weighted average if no volume data
+    cumPV += tp * vol;
+    cumVol += vol;
+    out[i] = cumVol ? cumPV / cumVol : tp;
+  }
+  return { vwap: out, hasVolume };
+}
+// Market Structure — swing highs/lows (fractals) → trend structure + BOS / CHoCH detection
+function marketStructureCalc(highs, lows, closes) {
+  const n = highs.length;
+  const swingHighs = [], swingLows = [];
+  for (let i=2;i<n-2;i++) {
+    if (highs[i]>highs[i-1] && highs[i]>highs[i-2] && highs[i]>highs[i+1] && highs[i]>highs[i+2]) swingHighs.push({idx:i, price:highs[i]});
+    if (lows[i]<lows[i-1] && lows[i]<lows[i-2] && lows[i]<lows[i+1] && lows[i]<lows[i+2]) swingLows.push({idx:i, price:lows[i]});
+  }
+  if (swingHighs.length<2 || swingLows.length<2) {
+    return { structure:'neutral', event:null, tone:'neutral', text:'بيانات غير كافية لتحديد الهيكل السعري' };
+  }
+  const lastTwoHighs = swingHighs.slice(-2), lastTwoLows = swingLows.slice(-2);
+  let structure = 'neutral';
+  if (lastTwoHighs[1].price > lastTwoHighs[0].price && lastTwoLows[1].price > lastTwoLows[0].price) structure = 'bullish';
+  else if (lastTwoHighs[1].price < lastTwoHighs[0].price && lastTwoLows[1].price < lastTwoLows[0].price) structure = 'bearish';
+
+  const lastClose = closes[n-1];
+  const recentHigh = swingHighs[swingHighs.length-1];
+  const recentLow = swingLows[swingLows.length-1];
+  let event=null, tone='neutral', text='';
+
+  if (structure === 'bullish') {
+    if (lastClose > recentHigh.price) { event='BOS'; tone='bull'; text='كسر هيكل صاعد (BOS) — تأكيد استمرار الاتجاه الصاعد'; }
+    else if (lastClose < recentLow.price) { event='CHoCH'; tone='bear'; text='تغيّر شخصية السوق (CHoCH) — كسر هابط يهدد الاتجاه الصاعد، احتمال انعكاس'; }
+    else text = 'هيكل صاعد (قمم وقيعان أعلى) — بدون كسر واضح بعد';
+  } else if (structure === 'bearish') {
+    if (lastClose < recentLow.price) { event='BOS'; tone='bear'; text='كسر هيكل هابط (BOS) — تأكيد استمرار الاتجاه الهابط'; }
+    else if (lastClose > recentHigh.price) { event='CHoCH'; tone='bull'; text='تغيّر شخصية السوق (CHoCH) — كسر صاعد يهدد الاتجاه الهابط، احتمال انعكاس'; }
+    else text = 'هيكل هابط (قمم وقيعان أدنى) — بدون كسر واضح بعد';
+  } else {
+    text = 'هيكل غير واضح / مرحلة انتقالية بين اتجاهين';
+  }
+  return { structure, event, tone, text, swingHighs, swingLows };
+}
+
+const fmt = (n,d=2) => (n==null || Number.isNaN(n)) ? "—" : n.toLocaleString("en-US",{minimumFractionDigits:d, maximumFractionDigits:d});
+
+// ---------- confirmation layer: divergence, candle patterns, level confluence ----------
+
+// RSI/price divergence over recent local swing highs/lows
+function detectDivergence(closes, rsi, lookback=30) {
+  const n = closes.length;
+  const start = Math.max(1, n - lookback);
+  const lowIdxs = [], highIdxs = [];
+  for (let i=start; i<n-1; i++) {
+    if (closes[i] < closes[i-1] && closes[i] < closes[i+1]) lowIdxs.push(i);
+    if (closes[i] > closes[i-1] && closes[i] > closes[i+1]) highIdxs.push(i);
+  }
+  let bullish = false, bearish = false;
+  if (lowIdxs.length >= 2) {
+    const [a, b] = lowIdxs.slice(-2);
+    if (closes[b] < closes[a] && rsi[b]!=null && rsi[a]!=null && rsi[b] > rsi[a]) bullish = true;
+  }
+  if (highIdxs.length >= 2) {
+    const [a, b] = highIdxs.slice(-2);
+    if (closes[b] > closes[a] && rsi[b]!=null && rsi[a]!=null && rsi[b] < rsi[a]) bearish = true;
+  }
+  if (bullish) return { tone:'bull', text:'دايفرجنس صاعد — السعر يعمل قاع أدنى وRSI يعمل قاع أعلى (احتمال ارتداد صاعد)' };
+  if (bearish) return { tone:'bear', text:'دايفرجنس هابط — السعر يعمل قمة أعلى وRSI يعمل قمة أدنى (احتمال ارتداد هابط)' };
+  return { tone:'neutral', text:'ما فيه دايفرجنس واضح حالياً' };
+}
+
+// classic candlestick pattern on the last 1-2 candles
+function detectCandlePattern(raw) {
+  const n = raw.length;
+  if (n < 2) return { tone:'neutral', text:'بيانات غير كافية' };
+  const c1 = raw[n-2], c2 = raw[n-1]; // previous, current
+  const o1=parseFloat(c1.open), c1c=parseFloat(c1.close), h1=parseFloat(c1.high), l1=parseFloat(c1.low);
+  const o2=parseFloat(c2.open), c2c=parseFloat(c2.close), h2=parseFloat(c2.high), l2=parseFloat(c2.low);
+  const body2 = Math.abs(c2c-o2), range2 = h2-l2 || 1e-9;
+  const upperWick = h2 - Math.max(o2,c2c), lowerWick = Math.min(o2,c2c) - l2;
+
+  // Engulfing
+  if (c1c < o1 && c2c > o2 && c2c >= o1 && o2 <= c1c) return { tone:'bull', text:'ابتلاع صاعد (Bullish Engulfing) — شمعة صاعدة كبيرة تبتلع الهابطة اللي قبلها' };
+  if (c1c > o1 && c2c < o2 && c2c <= o1 && o2 >= c1c) return { tone:'bear', text:'ابتلاع هابط (Bearish Engulfing) — شمعة هابطة كبيرة تبتلع الصاعدة اللي قبلها' };
+  // Doji
+  if (body2 / range2 < 0.1) return { tone:'neutral', text:'دوجي (Doji) — تردد بالسوق، احتمال انعكاس قريب' };
+  // Hammer (small body, long lower wick, near top of range) — bullish at a low
+  if (lowerWick > body2*2 && upperWick < body2*0.5) return { tone:'bull', text:'مطرقة (Hammer) — رفض هابط قوي، إشارة ارتداد صاعد محتملة' };
+  // Shooting star (small body, long upper wick) — bearish at a high
+  if (upperWick > body2*2 && lowerWick < body2*0.5) return { tone:'bear', text:'نجمة هابطة (Shooting Star) — رفض صاعد قوي، إشارة ارتداد هابط محتملة' };
+
+  return { tone:'neutral', text:'ما فيه نمط شمعة واضح بالشمعة الحالية' };
+}
+
+// checks whether price sits inside a cluster of ≥2 independent S/R levels (fib + pivot + Bollinger)
+function keyLevelConfluence(price, fibs, piv, bb, atrVal) {
+  const threshold = atrVal ? atrVal * 0.6 : price * 0.003;
+  const levels = [
+    ...fibs.map(f=>({ price:f.price, src:'فيبو '+(f.ratio*100).toFixed(1)+'%' })),
+    { price: piv.s1, src:'Pivot S1' }, { price: piv.s2, src:'Pivot S2' }, { price: piv.r1, src:'Pivot R1' }, { price: piv.r2, src:'Pivot R2' },
+    { price: bb.upper, src:'Bollinger العلوي' }, { price: bb.lower, src:'Bollinger السفلي' },
+  ].filter(l => l.price != null);
+  const nearby = levels.filter(l => Math.abs(l.price - price) <= threshold);
+  if (nearby.length >= 2) {
+    return { hit:true, text:`منطقة تجمع مستويات (${nearby.map(l=>l.src).join(' + ')}) — تقارب رقمي بين أكثر من مستوى، مؤشر إضافي مو دليل قاطع (فيبوناتشي وPivot وBollinger مو مستقلين إحصائياً عن بعض)` };
+  }
+  return { hit:false, text:'ما فيه تجمع مستويات واضح عند السعر الحالي' };
+}
+
+// SuperTrend — ATR-based trend flip line, very common in algo/professional setups
+function superTrendCalc(highs, lows, closes, period=10, mult=3) {
+  const n = closes.length;
+  const atrArr = atrCalc(highs, lows, closes, period);
+  const st = new Array(n).fill(null);
+  const dir = new Array(n).fill(null); // 1 = up/bull, -1 = down/bear
+  let upperBand = null, lowerBand = null, curDir = 1;
+  for (let i=0;i<n;i++) {
+    if (atrArr[i]==null) continue;
+    const mid = (highs[i]+lows[i])/2;
+    let basicUpper = mid + mult*atrArr[i];
+    let basicLower = mid - mult*atrArr[i];
+    if (upperBand==null) { upperBand=basicUpper; lowerBand=basicLower; }
+    else {
+      upperBand = (basicUpper < upperBand || closes[i-1] > upperBand) ? basicUpper : upperBand;
+      lowerBand = (basicLower > lowerBand || closes[i-1] < lowerBand) ? basicLower : lowerBand;
+    }
+    if (closes[i] > upperBand) curDir = 1;
+    else if (closes[i] < lowerBand) curDir = -1;
+    dir[i] = curDir;
+    st[i] = curDir === 1 ? lowerBand : upperBand;
+  }
+  return { st, dir };
+}
+
+// Money Flow Index — volume-weighted RSI
+function mfiCalc(highs, lows, closes, volumes, period=14) {
+  const n = closes.length;
+  const hasVolume = volumes.some(v=>v>0);
+  const tp = highs.map((h,i)=>(h+lows[i]+closes[i])/3);
+  const rawFlow = tp.map((v,i)=> v * (hasVolume ? (volumes[i]||0) : 1));
+  const out = new Array(n).fill(null);
+  for (let i=period;i<n;i++) {
+    let posFlow=0, negFlow=0;
+    for (let j=i-period+1;j<=i;j++) {
+      if (tp[j] > tp[j-1]) posFlow += rawFlow[j];
+      else if (tp[j] < tp[j-1]) negFlow += rawFlow[j];
+    }
+    const mr = negFlow===0 ? 100 : posFlow/negFlow;
+    out[i] = negFlow===0 ? 100 : 100 - (100/(1+mr));
+  }
+  return { mfi: out, hasVolume };
+}
+
+// Bollinger squeeze — flags when volatility (band width) is unusually tight vs recent history
+function bollingerSqueeze(bb, closes, lookback=100) {
+  const n = closes.length;
+  const widths = [];
+  for (let i=0;i<n;i++) {
+    if (bb.upper[i]!=null && bb.lower[i]!=null && bb.mid[i]) widths.push({ i, w: (bb.upper[i]-bb.lower[i])/bb.mid[i] });
+  }
+  if (widths.length < 20) return { squeeze:false, text:'بيانات غير كافية' };
+  const recent = widths.slice(-Math.min(lookback, widths.length));
+  const currentW = recent[recent.length-1].w;
+  const sorted = [...recent.map(r=>r.w)].sort((a,b)=>a-b);
+  const rank = sorted.findIndex(w => w >= currentW) / sorted.length;
+  if (rank <= 0.15) {
+    return { squeeze:true, text:'انضغاط تذبذب واضح — السوق هادئ جداً، احتمال حركة قوية قريبة بأي اتجاه' };
+  }
+  return { squeeze:false, text:'تذبذب طبيعي — ما فيه انضغاط ملحوظ' };
+}
+
+
+let charts = {};
+function destroyCharts(){ Object.values(charts).forEach(c=>c && c.destroy()); charts = {}; }
+
+const ASSETS = {
+  XAU: { symbol: 'XAU/USD', name: 'الذهب', short: 'XAU/USD', color: '#E8C468', icon: '🥇' },
+  BTC: { symbol: 'BTC/USD', name: 'بيتكوين', short: 'BTC/USD', color: '#C9962E', icon: '₿' },
+};
+const TF_SETS = {
+  swing: [ {key:'1day',label:'يومي'}, {key:'4h',label:'4 ساعات'}, {key:'1h',label:'ساعة'} ],
+  scalp: [ {key:'15min',label:'15 دقيقة'}, {key:'5min',label:'5 دقايق'}, {key:'1min',label:'دقيقة'} ],
+};
+let activeAsset = 'XAU';
+let tradeMode = 'swing'; // 'swing' | 'scalp'
+const cache = { XAU: null, BTC: null }; // { raw, dxy, mtf: [{key,label,tone,text}], mtfMode }
+
+// lightweight trend read for a single timeframe (used for multi-timeframe confluence)
+function quickTrend(raw, isScalp) {
+  if (!raw || raw.length < 30) return { tone:'neutral', text:'بيانات غير كافية' };
+  const closes = raw.map(v=>parseFloat(v.close));
+  const fast = isScalp ? ema(closes,9) : sma(closes,50);
+  const slow = isScalp ? ema(closes,21) : sma(closes,200);
+  const { macdLine, signal } = macdCalc(closes);
+  const last = closes.length-1;
+  const price = closes[last];
+  let score = 0;
+  if (slow[last]!=null) {
+    if (price>fast[last] && fast[last]>slow[last]) score+=2;
+    else if (price<fast[last] && fast[last]<slow[last]) score-=2;
+    else if (price>fast[last]) score+=1;
+    else score-=1;
+  }
+  if (macdLine[last]!=null && signal[last]!=null) {
+    score += macdLine[last]>signal[last] ? 1 : -1;
+  }
+  const tone = score>=2 ? 'bull' : score<=-2 ? 'bear' : 'neutral';
+  const text = score>=2 ? 'اتجاه صاعد' : score<=-2 ? 'اتجاه هابط' : 'محايد / متذبذب';
+  return { tone, text };
+}
+
+async function fetchSeries(symbol, interval, apiKey) {
+  const url = `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=${interval}&outputsize=300&apikey=${apiKey}`;
+  const res = await fetch(url);
+  const json = await res.json();
+  if (json.status === 'error' || !json.values) throw new Error(json.message || 'تعذر جلب البيانات');
+  return [...json.values].reverse();
+}
+
+// ---------- Backtest engine ----------
+// Calls the EXACT SAME computeSnapshot() used by the live recommendation at every historical bar
+// (passing only the data available up to that bar, so there is no look-ahead), then simulates each
+// signal forward using the same ATR-based stop/target rules, to report real win-rate stats.
+// Excluded because there is no historical equivalent available per-bar: multi-timeframe confluence
+// and DXY trend (computeSnapshot is called with dxyTrend=null here, same code path as live otherwise).
+function runBacktest(raw, isScalp, lookaheadBars, asset) {
+  const n = raw.length;
+  const minBars = isScalp ? 60 : 210;
+  if (n < minBars + 20) return { error: `تحتاج بيانات أكثر لتشغيل الباكتست (${n} شمعة متوفرة فقط)` };
+
+  const highs = raw.map(v=>parseFloat(v.high));
+  const lows = raw.map(v=>parseFloat(v.low));
+
+  const startIdx = minBars;
+  const endIdx = n - lookaheadBars - 1;
+  if (endIdx <= startIdx) return { error: 'بيانات غير كافية لعدد الشموع المطلوب للمتابعة بعد كل إشارة' };
+
+  const trades = [];
+  let i = startIdx;
+  while (i <= endIdx) {
+    // identical engine as live — called with data truncated to what was "known" at bar i
+    const snap = computeSnapshot(raw.slice(0, i+1), isScalp, asset, null);
+    const action = snap.normScore>=25 ? 'buy' : snap.normScore<=-25 ? 'sell' : 'wait';
+
+    if (action === 'wait' || snap.atr[snap.last]==null) { i++; continue; }
+
+    const entry = snap.price;
+    const atrVal = snap.atr[snap.last];
+    const slMult = isScalp ? 0.8 : 1.5;
+    const tpMult = isScalp ? 1.2 : 2.5;
+    const sl = action==='buy' ? entry - atrVal*slMult : entry + atrVal*slMult;
+    const tp = action==='buy' ? entry + atrVal*tpMult : entry - atrVal*tpMult;
+
+    let outcome = 'timeout', exitIdx = Math.min(i+lookaheadBars, n-1);
+    for (let j=i+1; j<=Math.min(i+lookaheadBars, n-1); j++) {
+      const hitTP = action==='buy' ? highs[j]>=tp : lows[j]<=tp;
+      const hitSL = action==='buy' ? lows[j]<=sl : highs[j]>=sl;
+      // same-bar ambiguity: OHLC data alone can't tell which level was touched first —
+      // we conservatively assume the stop loss hit first (worst case), never the reverse.
+      if (hitTP && hitSL) { outcome='loss'; exitIdx=j; break; }
+      if (hitTP) { outcome='win'; exitIdx=j; break; }
+      if (hitSL) { outcome='loss'; exitIdx=j; break; }
+    }
+    trades.push({ idx:i, action, entry, sl, tp, outcome, exitIdx, barsToResolve: exitIdx - i });
+    i = exitIdx + 1; // no overlapping trades — realistic one-at-a-time simulation
+  }
+
+  const resolved = trades.filter(t=>t.outcome!=='timeout');
+  const wins = trades.filter(t=>t.outcome==='win').length;
+  const losses = trades.filter(t=>t.outcome==='loss').length;
+  const timeouts = trades.filter(t=>t.outcome==='timeout').length;
+  const winRate = resolved.length ? (wins/resolved.length*100) : null;
+
+  const winTrades = trades.filter(t=>t.outcome==='win');
+  const lossTrades = trades.filter(t=>t.outcome==='loss');
+  const avgBarsWin = winTrades.length ? (winTrades.reduce((s,t)=>s+t.barsToResolve,0)/winTrades.length) : null;
+  const avgBarsLoss = lossTrades.length ? (lossTrades.reduce((s,t)=>s+t.barsToResolve,0)/lossTrades.length) : null;
+  const avgBarsAll = resolved.length ? (resolved.reduce((s,t)=>s+t.barsToResolve,0)/resolved.length) : null;
+
+  const buyTrades = trades.filter(t=>t.action==='buy');
+  const sellTrades = trades.filter(t=>t.action==='sell');
+  const buyResolved = buyTrades.filter(t=>t.outcome!=='timeout');
+  const sellResolved = sellTrades.filter(t=>t.outcome!=='timeout');
+  const buyWinRate = buyResolved.length ? (buyTrades.filter(t=>t.outcome==='win').length/buyResolved.length*100) : null;
+  const sellWinRate = sellResolved.length ? (sellTrades.filter(t=>t.outcome==='win').length/sellResolved.length*100) : null;
+
+  return {
+    totalSignals: trades.length, wins, losses, timeouts, winRate,
+    buyCount: buyTrades.length, buyWinRate,
+    sellCount: sellTrades.length, sellWinRate,
+    avgBarsWin, avgBarsLoss, avgBarsAll,
+    barsUsed: n,
+  };
+}
+
+function switchMode(mode) {
+  tradeMode = mode;
+  document.getElementById('modeSwing').className = 'mode-btn' + (mode==='swing' ? ' active' : '');
+  document.getElementById('modeScalp').className = 'mode-btn' + (mode==='scalp' ? ' active' : '');
+  const intervalSel = document.getElementById('interval');
+  intervalSel.value = mode === 'scalp' ? '5min' : '1day';
+  const c = cache[activeAsset];
+  if (c) render(activeAsset, c.raw, c.dxy);
+}
+
+function switchAsset(key) {
+  activeAsset = key;
+  document.getElementById('tabGold').className = 'tab-btn' + (key==='XAU' ? ' active-gold' : '');
+  document.getElementById('tabBtc').className = 'tab-btn' + (key==='BTC' ? ' active-btc' : '');
+  document.getElementById('btnText').textContent = 'جيب تحليل ' + ASSETS[key].name;
+  document.getElementById('headerTitle').textContent = key === 'XAU' ? 'GOLD DESK' : 'BTC DESK';
+  document.getElementById('headerSub').textContent = ASSETS[key].short + ' · تحليل فني';
+  document.getElementById('headerLogo').textContent = key === 'XAU' ? '$' : '₿';
+  document.getElementById('headerLogo').style.background = key === 'XAU'
+    ? 'linear-gradient(135deg, #E8C468, #8A6D1F)'
+    : 'linear-gradient(135deg, #C9962E, #5C4014)';
+  document.getElementById('errorBox').innerHTML = '';
+  const c = cache[key];
+  if (c) render(key, c.raw, c.dxy, c.mtf, c.mtfMode, c.dxyTrend);
+  else document.getElementById('content').innerHTML = `<div class="empty">دخّل API key واضغط "جيب تحليل ${ASSETS[key].name}" حتى تشوف كل المؤشرات</div>`;
+}
+
+// ---------- Telegram auto-alerts (1m watch) ----------
+let tgWatchTimer = null;
+let tgWatching = false;
+const tgLastSignal = { XAU: null, BTC: null }; // last notified action+confidence, to avoid repeat spam
+
+async function sendTelegramMessage(token, chatId, text) {
+  const url = `https://api.telegram.org/bot${token}/sendMessage`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' }),
+  });
+  const json = await res.json();
+  if (!json.ok) throw new Error(json.description || 'فشل إرسال رسالة تيليجرام');
+  return json;
+}
+
+async function checkAssetForAlert(assetKey, token, chatId, minConfidence) {
+  const symbol = ASSETS[assetKey].symbol;
+  try {
+    const raw = await fetchSeries(symbol, '1min', document.getElementById('apiKey').value.trim());
+    if (!raw || raw.length < 60) return;
+
+    const snap = computeSnapshot(raw, true, assetKey, null); // isScalp=true for 1m
+    const rec = getRecommendation(
+      snap.price, snap.atr[snap.last], snap.fibs, snap.normScore,
+      snap.rsi[snap.last], snap.k[snap.last], snap.trendTone, snap.macdTone, snap.adx[snap.last],
+      true, snap.piv, null, snap.divergence, snap.candlePattern, snap.confluence,
+      snap.stTone, snap.mfi[snap.last], snap.squeeze, snap.ms
+    );
+
+    const strongEnough = minConfidence === 'verystrong'
+      ? rec.confidence === 'قوية جداً'
+      : (rec.confidence === 'قوية' || rec.confidence === 'قوية جداً');
+
+    const signalKey = rec.action !== 'wait' && strongEnough ? `${rec.action}:${rec.confidence}` : null;
+
+    if (signalKey && signalKey !== tgLastSignal[assetKey]) {
+      tgLastSignal[assetKey] = signalKey;
+      const actionLabel = rec.action === 'buy' ? '🟢 شراء' : '🔴 بيع';
+      const meta = ASSETS[assetKey];
+      const priceDecimals = assetKey === 'BTC' ? 0 : 2;
+      const msg =
+        `<b>${actionLabel} — ${meta.name} (${meta.short})</b>\n` +
+        `فريم: 1 دقيقة | الثقة: ${rec.confidence}\n` +
+        `السعر: ${fmt(snap.price, priceDecimals)}\n` +
+        (rec.stop!=null ? `وقف: ${fmt(rec.stop, priceDecimals)} | هدف: ${fmt(rec.target, priceDecimals)}\n` : '') +
+        `السبب: ${rec.reasons[0] || '—'}`;
+      await sendTelegramMessage(token, chatId, msg);
+    } else if (!signalKey) {
+      tgLastSignal[assetKey] = null; // reset once the strong signal fades, so a fresh one later re-notifies
+    }
+  } catch (e) {
+    console.error('tg watch error for', assetKey, e);
+  }
+}
+
+async function tgWatchTick() {
+  const token = document.getElementById('tgToken').value.trim();
+  const chatId = document.getElementById('tgChatId').value.trim();
+  const assetSel = document.getElementById('tgAsset').value;
+  const minConfidence = document.getElementById('tgMinConfidence').value;
+  const statusEl = document.getElementById('tgStatus');
+
+  const assets = assetSel === 'BOTH' ? ['XAU','BTC'] : [assetSel];
+  statusEl.textContent = `يراقب... آخر فحص: ${new Date().toLocaleTimeString('ar')}`;
+  for (const a of assets) {
+    await checkAssetForAlert(a, token, chatId, minConfidence);
+  }
+}
+
+window.toggleTelegramWatch = function() {
+  const btn = document.getElementById('tgToggleBtn');
+  const statusEl = document.getElementById('tgStatus');
+  const token = document.getElementById('tgToken').value.trim();
+  const chatId = document.getElementById('tgChatId').value.trim();
+
+  if (!tgWatching) {
+    if (!token || !chatId) {
+      statusEl.textContent = '⚠️ لازم تدخل Bot Token و Chat ID أول.';
+      return;
+    }
+    if (!document.getElementById('apiKey').value.trim()) {
+      statusEl.textContent = '⚠️ لازم تدخل API key مال Twelve Data فوق أول.';
+      return;
+    }
+    tgWatching = true;
+    btn.textContent = '⏸ إيقاف المراقبة';
+    tgLastSignal.XAU = null; tgLastSignal.BTC = null;
+    const intervalMs = parseInt(document.getElementById('tgInterval').value, 10);
+    tgWatchTick();
+    tgWatchTimer = setInterval(tgWatchTick, intervalMs);
+  } else {
+    tgWatching = false;
+    btn.textContent = '▶ تشغيل المراقبة';
+    if (tgWatchTimer) clearInterval(tgWatchTimer);
+    statusEl.textContent = 'المراقبة متوقفة.';
+  }
+};
+
+async function runAnalysis() {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  const interval = document.getElementById('interval').value;
+  const errorBox = document.getElementById('errorBox');
+  const btnIcon = document.getElementById('btnIcon');
+  const btn = document.getElementById('fetchBtn');
+  const asset = activeAsset;
+  const modeAtFetch = tradeMode;
+  errorBox.innerHTML = '';
+
+  if (!apiKey) {
+    errorBox.innerHTML = '<div class="error">⚠️ لازم تدخل API key من Twelve Data حتى نقدر نجيب الأسعار.</div>';
+    return;
+  }
+  btn.disabled = true;
+  btnIcon.className = 'spin';
+  btnIcon.textContent = '↻';
+
+  try {
+    const symbol = ASSETS[asset].symbol;
+    const raw = await fetchSeries(symbol, interval, apiKey);
+
+    let dxy = null, dxyTrend = null;
+    if (asset === 'XAU') {
+      try {
+        const dxyRaw = await fetchSeries('DXY', interval, apiKey);
+        if (dxyRaw && dxyRaw.length) {
+          dxy = parseFloat(dxyRaw[dxyRaw.length-1].close);
+          dxyTrend = quickTrend(dxyRaw, modeAtFetch==='scalp');
+        }
+      } catch(e) {}
+    }
+
+    // multi-timeframe confluence — fetch the 3 timeframes for the active mode
+    let mtf = null;
+    try {
+      const tfSet = TF_SETS[modeAtFetch];
+      const results = await Promise.all(tfSet.map(tf =>
+        fetchSeries(symbol, tf.key, apiKey).catch(() => null)
+      ));
+      mtf = tfSet.map((tf, i) => {
+        const qt = quickTrend(results[i], modeAtFetch==='scalp');
+        return { key: tf.key, label: tf.label, tone: qt.tone, text: qt.text, ok: results[i]!=null };
+      });
+    } catch(e) { mtf = null; }
+
+    cache[asset] = { raw, dxy, dxyTrend, mtf, mtfMode: modeAtFetch, interval };
+    if (activeAsset === asset) render(asset, raw, dxy, mtf, modeAtFetch, dxyTrend);
+  } catch (e) {
+    errorBox.innerHTML = `<div class="error">⚠️ ${e.message || 'صار خطأ بجلب البيانات.'}</div>`;
+  } finally {
+    btn.disabled = false;
+    btnIcon.textContent = '↻';
+  }
+}
+
+function getRecommendation(price, atr, fibs, normScore, rsiVal, kVal, trendTone, macdTone, adxVal, isScalp, piv, mtf, divergence, candlePattern, confluence, stTone, mfiVal, squeeze, ms) {
+  const overboughtExtreme = rsiVal > (isScalp?78:75) || kVal > 88;
+  const oversoldExtreme = rsiVal < (isScalp?22:25) || kVal < 12;
+  const strongTrend = adxVal != null && adxVal > 25;
+
+  let action = 'wait', reasons = [];
+  if (normScore >= 22 && !overboughtExtreme) {
+    action = 'buy';
+    reasons.push('الاتجاه العام والزخم يدعمون الصعود (MA + MACD)');
+    if (rsiVal < 65) reasons.push('RSI ما وصل منطقة تشبع شرائي خطيرة');
+    if (strongTrend) reasons.push('ADX يؤكد إن الاتجاه قوي مو عرضي');
+  } else if (normScore <= -22 && !oversoldExtreme) {
+    action = 'sell';
+    reasons.push('الاتجاه العام والزخم يدعمون الهبوط (MA + MACD)');
+    if (rsiVal > 35) reasons.push('RSI ما وصل منطقة تشبع بيعي خطيرة');
+    if (strongTrend) reasons.push('ADX يؤكد إن الاتجاه قوي مو عرضي');
+  } else if (normScore >= 22 && overboughtExtreme) {
+    action = 'wait';
+    reasons.push('الاتجاه صاعد بس المؤشرات بمنطقة تشبع شرائي قوية — احتمال تصحيح قريب');
+  } else if (normScore <= -22 && oversoldExtreme) {
+    action = 'wait';
+    reasons.push('الاتجاه هابط بس المؤشرات بمنطقة تشبع بيعي قوية — احتمال ارتداد قريب');
+  } else {
+    action = 'wait';
+    reasons.push('الإشارات متضاربة أو ضعيفة — لا يوجد اتجاه واضح حالياً');
+  }
+
+  if (adxVal != null && adxVal < 20 && action !== 'wait') {
+    reasons.push('تنبيه: ADX تحت 20 — يعني السوق عرضي (range) والاتجاه ضعيف رغم الإشارة');
+  }
+  if (trendTone !== macdTone && trendTone !== 'neutral' && macdTone !== 'neutral') {
+    reasons.push('تنبيه: MA و MACD ما يتفقون بنفس الاتجاه');
+  }
+
+  // ---- confidence = count of independent confirming pillars, not just the raw score ----
+  let confidence = 'ضعيفة';
+  if (action !== 'wait') {
+    const recTone = action === 'buy' ? 'bull' : 'bear';
+    let pillars = 1; // trend+momentum base (normScore already crossed the threshold)
+    const pillarNotes = [];
+
+    if (strongTrend) { pillars++; pillarNotes.push('ADX يؤكد قوة الاتجاه'); }
+
+    if (mtf) {
+      const valid = mtf.filter(tf => tf.ok);
+      if (valid.length === 0) {
+        reasons.push('⚠️ تعذر جلب أي فريم إضافي للمقارنة — الثقة ما اعتمدت على توافق الفريمات هذي المرة');
+      } else {
+        const agree = valid.filter(tf => tf.tone === recTone).length;
+        const disagree = valid.filter(tf => tf.tone !== 'neutral' && tf.tone !== recTone).length;
+        if (valid.length < mtf.length) {
+          reasons.push(`⚠️ تعذر جلب ${mtf.length - valid.length} فريم — التقييم مبني على ${valid.length} فقط`);
+        }
+        if (agree === valid.length) { pillars += 2; reasons.unshift(`✅ كل الفريمات المتوفرة (${valid.map(t=>t.label).join('، ')}) متوافقة مع نفس الاتجاه`); }
+        else if (agree > disagree) { pillars += 1; }
+        else if (disagree > 0) { reasons.push(`⚠️ تحذير: فريم ${valid.filter(tf=>tf.tone!=='neutral' && tf.tone!==recTone).map(t=>t.label).join('، ')} يعارض هذا الاتجاه`); pillars -= 1; }
+      }
+    }
+
+    if (divergence && divergence.tone === recTone) { pillars += 2; reasons.unshift('🔍 '+divergence.text); }
+    else if (divergence && divergence.tone !== 'neutral' && divergence.tone !== recTone) { reasons.push('⚠️ تحذير: '+divergence.text); pillars -= 1; }
+
+    if (candlePattern && candlePattern.tone === recTone) { pillars += 1; reasons.push('🕯️ '+candlePattern.text); }
+
+    if (confluence && confluence.hit) { pillars += 1; reasons.push('📍 '+confluence.text); }
+
+    if (stTone && stTone === recTone) { pillars += 1; reasons.push(recTone==='bull' ? '📈 SuperTrend يؤكد الاتجاه الصاعد' : '📉 SuperTrend يؤكد الاتجاه الهابط'); }
+    else if (stTone && stTone !== 'neutral' && stTone !== recTone) { reasons.push('⚠️ تحذير: SuperTrend يعارض هذا الاتجاه'); pillars -= 1; }
+
+    if (mfiVal != null) {
+      if (recTone==='bull' && mfiVal < 20) { pillars += 1; reasons.push('💰 MFI يؤكد تشبع بيعي مدعوم بالحجم'); }
+      else if (recTone==='bear' && mfiVal > 80) { pillars += 1; reasons.push('💰 MFI يؤكد تشبع شرائي مدعوم بالحجم'); }
+    }
+
+    if (squeeze && squeeze.squeeze) {
+      reasons.push('⚠️ تنبيه: السوق بانضغاط تذبذب — الحركة ممكن تكون كاذبة قبل الانفجار الحقيقي');
+      pillars -= 1;
+    }
+
+    if (ms && ms.event === 'BOS' && ms.tone === recTone) { pillars += 1; reasons.push('🏗️ '+ms.text); }
+    else if (ms && ms.event === 'CHoCH') {
+      if (ms.tone === recTone) { pillars += 2; reasons.unshift('🏗️ '+ms.text); }
+      else { reasons.push('⚠️ تحذير: '+ms.text); pillars -= 2; }
+    }
+
+    pillars = Math.max(0, pillars);
+    if (pillars >= 8) confidence = 'قوية جداً';
+    else if (pillars >= 5) confidence = 'قوية';
+    else if (pillars >= 2) confidence = 'متوسطة';
+    else confidence = 'ضعيفة';
+  }
+
+  let entry = price, stop = null, target = null;
+  const fibAbove = fibs.filter(f => f.price > price).sort((a,b)=>a.price-b.price)[0];
+  const fibBelow = fibs.filter(f => f.price < price).sort((a,b)=>b.price-a.price)[0];
+  const pivResAbove = piv ? [piv.r1,piv.r2,piv.r3].filter(v=>v>price).sort((a,b)=>a-b)[0] : null;
+  const pivSupBelow = piv ? [piv.s1,piv.s2,piv.s3].filter(v=>v<price).sort((a,b)=>b-a)[0] : null;
+
+  if (isScalp) {
+    // scalp: tighter stops, target the nearest pivot level
+    if (action === 'buy') {
+      stop = price - atr * 0.8;
+      target = pivResAbove || price + atr * 1.2;
+    } else if (action === 'sell') {
+      stop = price + atr * 0.8;
+      target = pivSupBelow || price - atr * 1.2;
+    }
+  } else {
+    if (action === 'buy') {
+      stop = price - atr * 1.5;
+      target = fibAbove ? fibAbove.price : price + atr * 2.5;
+    } else if (action === 'sell') {
+      stop = price + atr * 1.5;
+      target = fibBelow ? fibBelow.price : price - atr * 2.5;
+    }
+  }
+
+  let rr = null;
+  if (stop != null && target != null) {
+    const risk = Math.abs(entry - stop);
+    const reward = Math.abs(target - entry);
+    rr = risk > 0 ? (reward / risk) : null;
+  }
+
+  return { action, reasons, confidence, entry, stop, target, rr };
+}
+
+// ---------- SHARED signal engine ----------
+// Used identically by the live render() (idx = last bar) and by runBacktest() (idx = each historical bar,
+// called with a truncated slice of `raw`) — this guarantees the backtest replays the EXACT same
+// score/threshold/action logic the live recommendation uses, instead of a separate approximation.
+// The only things intentionally excluded here (because they need live cross-source data with no
+// historical equivalent available per-bar) are: multi-timeframe confluence and DXY trend for backtest
+// calls (dxyTrend is simply passed as null there).
+function computeSnapshot(raw, isScalp, asset, dxyTrend) {
+  const dates = raw.map(v=>v.datetime);
+  const closes = raw.map(v=>parseFloat(v.close));
+  const highs = raw.map(v=>parseFloat(v.high));
+  const lows = raw.map(v=>parseFloat(v.low));
+  const volumes = raw.map(v=>parseFloat(v.volume)||0);
+
+  // trend basis: SMA50/200 for swing, EMA9/21 for scalp
+  const trendFast = isScalp ? ema(closes,9) : sma(closes,50);
+  const trendSlow = isScalp ? ema(closes,21) : sma(closes,200);
+  const trendFastLabel = isScalp ? 'EMA9' : 'MA50';
+  const trendSlowLabel = isScalp ? 'EMA21' : 'MA200';
+  const ema50 = isScalp ? ema(closes,50) : null;
+
+  const { macdLine, signal, hist } = macdCalc(closes);
+  const rsiPeriod = isScalp ? 7 : 14;
+  const rsi = rsiCalc(closes,rsiPeriod);
+  const { k, d } = isScalp ? stochasticCalc(highs,lows,closes,5,3,3) : stochasticCalc(highs,lows,closes,14,3,3);
+  const bb = bollingerCalc(closes,20,2);
+  const atrPeriod = isScalp ? 10 : 14;
+  const atr = atrCalc(highs,lows,closes,atrPeriod);
+  const fibs = fibLevels(highs,lows,Math.min(90,closes.length));
+  const adxPeriod = isScalp ? 7 : 14;
+  const { adx, plusDI, minusDI } = adxCalc(highs,lows,closes,adxPeriod);
+  const willPeriod = isScalp ? 7 : 14;
+  const willR = williamsRCalc(highs,lows,closes,willPeriod);
+  const cciPeriod = isScalp ? 10 : 20;
+  const cci = cciCalc(highs,lows,closes,cciPeriod);
+  const { vwap, hasVolume } = isScalp ? vwapCalc(dates,highs,lows,closes,volumes) : { vwap:null, hasVolume:false };
+  const sar = parabolicSarCalc(highs, lows, isScalp?0.03:0.02, isScalp?0.25:0.2);
+  const ichi = ichimokuCalc(highs, lows, isScalp?7:9, isScalp?22:26, isScalp?44:52);
+  const { obv, hasVolume: obvHasVolume } = obvCalc(closes, volumes);
+  const obvSma = sma(obv, isScalp?10:20);
+  const rocPeriod = isScalp ? 9 : 12;
+  const roc = rocCalc(closes, rocPeriod);
+  const stPeriod = isScalp ? 7 : 10;
+  const { st: supertrend, dir: stDir } = superTrendCalc(highs, lows, closes, stPeriod, isScalp?2.5:3);
+  const mfiPeriod = isScalp ? 10 : 14;
+  const { mfi, hasVolume: mfiHasVolume } = mfiCalc(highs, lows, closes, volumes, mfiPeriod);
+
+  const last = closes.length-1;
+  const price = closes[last];
+  const changePct = ((price-closes[last-1])/closes[last-1])*100;
+  const piv = pivotPoints(highs[last-1], lows[last-1], closes[last-1]);
+
+  let score=0, trendTone='neutral', trendText='متذبذب / بدون اتجاه واضح';
+  if (trendSlow[last]!=null) {
+    if (price>trendFast[last] && trendFast[last]>trendSlow[last]) { score+=2; trendTone='bull'; trendText=`اتجاه صاعد قوي (فوق ${trendFastLabel} و${trendSlowLabel})`; }
+    else if (price<trendFast[last] && trendFast[last]<trendSlow[last]) { score-=2; trendTone='bear'; trendText=`اتجاه هابط قوي (تحت ${trendFastLabel} و${trendSlowLabel})`; }
+    else if (price>trendFast[last]) { score+=1; trendTone='bull'; trendText='ميل صاعد بس مو مؤكد'; }
+    else { score-=1; trendTone='bear'; trendText='ميل هابط بس مو مؤكد'; }
+  } else { trendText=`بيانات غير كافية لـ ${trendSlowLabel}`; }
+
+  // VWAP (scalp only): price vs session VWAP — only enters the score when real volume is available
+  let vwapTone='neutral', vwapText='';
+  if (isScalp && vwap && vwap[last]!=null) {
+    if (!hasVolume) {
+      vwapTone='neutral';
+      vwapText='الحجم الحقيقي غير متوفر من المصدر — VWAP تقريبي (بمتوسط سعر بسيط) ومُستبعد من حساب القرار';
+    } else if (price > vwap[last]) { score += 0.5; vwapTone='bull'; vwapText='السعر فوق VWAP — ضغط شرائي بالجلسة'; }
+    else { score -= 0.5; vwapTone='bear'; vwapText='السعر تحت VWAP — ضغط بيعي بالجلسة'; }
+  }
+
+  // ADX modulates trend confidence
+  let adxTone='neutral', adxText='بيانات غير كافية';
+  if (adx[last]!=null) {
+    if (adx[last]>25) {
+      score += (score>0?0.6: score<0?-0.6:0);
+      adxTone = trendTone !== 'neutral' ? trendTone : 'neutral';
+      adxText = 'اتجاه قوي ومؤكد (+DI: '+fmt(plusDI[last],1)+' / -DI: '+fmt(minusDI[last],1)+')';
+    } else if (adx[last]<20) {
+      score *= 0.7;
+      adxTone = 'neutral';
+      adxText = 'سوق عرضي (range) — الاتجاه ضعيف';
+    } else {
+      adxTone = 'neutral';
+      adxText = 'اتجاه متوسط القوة';
+    }
+  }
+
+  let macdTone='neutral', macdText='بدون إشارة واضحة';
+  if (macdLine[last]!=null && signal[last]!=null) {
+    if (macdLine[last]>signal[last]) { score+=1; macdTone='bull'; macdText='تقاطع صاعد (زخم إيجابي)'; }
+    else { score-=1; macdTone='bear'; macdText='تقاطع هابط (زخم سلبي)'; }
+  }
+  let rsiTone='neutral', rsiText='منطقة محايدة';
+  if (rsi[last]!=null) {
+    if (rsi[last]>70) { score-=1; rsiTone='bear'; rsiText='تشبع شرائي (overbought)'; }
+    else if (rsi[last]<30) { score+=1; rsiTone='bull'; rsiText='تشبع بيعي (oversold)'; }
+  }
+  let stochTone='neutral', stochText='منطقة محايدة';
+  if (k[last]!=null) {
+    if (k[last]>80) {
+      const conflict = trendTone === 'bull';
+      const w = conflict ? 0.5 : 1;
+      score -= 1*w; stochTone='bear';
+      stochText = 'تشبع شرائي (overbought)' + (conflict ? ' — إشارة ارتداد مؤقتة' : '');
+    } else if (k[last]<20) {
+      const conflict = trendTone === 'bear';
+      const w = conflict ? 0.5 : 1;
+      score += 1*w; stochTone='bull';
+      stochText = 'تشبع بيعي (oversold)' + (conflict ? ' — إشارة ارتداد مؤقتة' : '');
+    }
+  }
+  let willTone='neutral', willText='منطقة محايدة';
+  if (willR[last]!=null) {
+    if (willR[last]>-20) {
+      const conflict = trendTone === 'bull';
+      score -= conflict?0.5:1; willTone='bear';
+      willText='تشبع شرائي (overbought)' + (conflict?' — الاتجاه أقوى':'');
+    } else if (willR[last]<-80) {
+      const conflict = trendTone === 'bear';
+      score += conflict?0.5:1; willTone='bull';
+      willText='تشبع بيعي (oversold)' + (conflict?' — الاتجاه أقوى':'');
+    }
+  }
+  let cciTone='neutral', cciText='داخل النطاق الطبيعي';
+  if (cci[last]!=null) {
+    if (cci[last]>100) {
+      const conflict = trendTone === 'bull';
+      score -= conflict?0.5:1; cciTone='bear';
+      cciText='تشبع شرائي قوي' + (conflict?' — الاتجاه أقوى':'');
+    } else if (cci[last]<-100) {
+      const conflict = trendTone === 'bear';
+      score += conflict?0.5:1; cciTone='bull';
+      cciText='تشبع بيعي قوي' + (conflict?' — الاتجاه أقوى':'');
+    }
+  }
+  let bbTone='neutral', bbText='داخل النطاق الطبيعي';
+  if (bb.upper[last]!=null) {
+    if (price>bb.upper[last]) { score-=0.5; bbTone='bear'; bbText='فوق الحد العلوي (ممتد صعودياً)'; }
+    else if (price<bb.lower[last]) { score+=0.5; bbTone='bull'; bbText='تحت الحد السفلي (ممتد هبوطياً)'; }
+  }
+
+  let sarTone='neutral', sarText='بيانات غير كافية';
+  if (sar[last]!=null) {
+    if (price > sar[last]) { score+=1; sarTone='bull'; sarText='السعر فوق SAR — الاتجاه صاعد'; }
+    else { score-=1; sarTone='bear'; sarText='السعر تحت SAR — الاتجاه هابط'; }
+  }
+
+  let ichiTone='neutral', ichiText='بيانات غير كافية';
+  if (ichi.senkouA[last]!=null && ichi.senkouB[last]!=null) {
+    const cloudTop = Math.max(ichi.senkouA[last], ichi.senkouB[last]);
+    const cloudBottom = Math.min(ichi.senkouA[last], ichi.senkouB[last]);
+    if (price > cloudTop) { score+=1; ichiTone='bull'; ichiText='السعر فوق سحابة إيشيموكو — اتجاه صاعد'; }
+    else if (price < cloudBottom) { score-=1; ichiTone='bear'; ichiText='السعر تحت سحابة إيشيموكو — اتجاه هابط'; }
+    else { ichiText='السعر داخل السحابة — منطقة تردد'; }
+    if (ichi.tenkan[last]!=null && ichi.kijun[last]!=null) {
+      if (ichi.tenkan[last]>ichi.kijun[last]) { score+=0.5; }
+      else { score-=0.5; }
+    }
+  }
+
+  let obvTone='neutral', obvText='بيانات غير كافية';
+  if (!obvHasVolume) {
+    obvText = 'الحجم الحقيقي غير متوفر من المصدر — OBV مُستبعد من حساب القرار';
+  } else if (obvSma[last]!=null) {
+    if (obv[last] > obvSma[last]) { score+=0.5; obvTone='bull'; obvText='الحجم يدعم الصعود'; }
+    else { score-=0.5; obvTone='bear'; obvText='الحجم يدعم الهبوط'; }
+  }
+
+  let rocTone='neutral', rocText='زخم ضعيف';
+  if (roc[last]!=null) {
+    if (roc[last] > 0.5) { score+=0.5; rocTone='bull'; rocText='زخم إيجابي متسارع'; }
+    else if (roc[last] < -0.5) { score-=0.5; rocTone='bear'; rocText='زخم سلبي متسارع'; }
+  }
+
+  let stTone='neutral', stText='بيانات غير كافية';
+  if (stDir[last]!=null) {
+    if (stDir[last]===1) { score+=1.5; stTone='bull'; stText='SuperTrend صاعد — السعر فوق خط الدعم المتحرك'; }
+    else { score-=1.5; stTone='bear'; stText='SuperTrend هابط — السعر تحت خط المقاومة المتحرك'; }
+  }
+
+  let mfiTone='neutral', mfiText='منطقة محايدة';
+  if (!mfiHasVolume) {
+    mfiText = 'الحجم الحقيقي غير متوفر من المصدر — MFI مُستبعد من حساب القرار';
+  } else if (mfi[last]!=null) {
+    if (mfi[last] > 80) { score-=1; mfiTone='bear'; mfiText='تشبع شرائي مدعوم بالحجم (MFI)'; }
+    else if (mfi[last] < 20) { score+=1; mfiTone='bull'; mfiText='تشبع بيعي مدعوم بالحجم (MFI)'; }
+  }
+
+  // DXY integration — inverse relationship, gold only. null in backtest (no historical DXY series pulled).
+  let dxyTone='neutral', dxyText = '';
+  if (asset === 'XAU' && dxyTrend) {
+    if (dxyTrend.tone === 'bull') { score -= 1; dxyTone='bear'; dxyText='الدولار (DXY) بترند صاعد — ضغط هبوطي على الذهب'; }
+    else if (dxyTrend.tone === 'bear') { score += 1; dxyTone='bull'; dxyText='الدولار (DXY) بترند هابط — دعم للذهب'; }
+    else { dxyText='الدولار (DXY) بدون اتجاه واضح حالياً'; }
+  }
+
+  // confirmation layer: divergence, candlestick pattern, key-level confluence — computed ONLY on data
+  // up to `last` (the `raw` passed in is already truncated by the caller for backtest indices), so
+  // there is no look-ahead leakage into either the live or the historical signal.
+  const divergence = detectDivergence(closes, rsi, isScalp?20:30);
+  if (divergence.tone === 'bull') score += 1;
+  else if (divergence.tone === 'bear') score -= 1;
+
+  const candlePattern = detectCandlePattern(raw);
+  if (candlePattern.tone === 'bull') score += 0.5;
+  else if (candlePattern.tone === 'bear') score -= 0.5;
+
+  const confluence = keyLevelConfluence(price, fibs, piv, { upper: bb.upper[last], lower: bb.lower[last] }, atr[last]);
+  const squeeze = bollingerSqueeze(bb, closes, 100);
+
+  // market structure: BOS / CHoCH — swing fractals need 2 confirming bars, and since `raw` here is
+  // already truncated to what's "known" at this point, that confirmation delay is naturally respected.
+  const ms = marketStructureCalc(highs, lows, closes);
+  if (ms.event === 'BOS') score += (ms.tone==='bull' ? 1 : -1);
+  else if (ms.event === 'CHoCH') score += (ms.tone==='bull' ? 1.5 : -1.5);
+
+  const normScore = Math.max(-100, Math.min(100, Math.round((score/18)*100)));
+  let overallTone='neutral', overallText='محايد / مختلط';
+  if (normScore>35) { overallTone='bull'; overallText='ميل صاعد'; }
+  else if (normScore<-35) { overallTone='bear'; overallText='ميل هابط'; }
+
+  return {
+    dates, closes, highs, lows, volumes,
+    trendFast, trendSlow, trendFastLabel, trendSlowLabel, ema50,
+    macdLine, signal, hist, rsiPeriod, rsi, k, d, bb, atrPeriod, atr, fibs,
+    adxPeriod, adx, plusDI, minusDI, willPeriod, willR, cciPeriod, cci,
+    vwap, hasVolume, sar, ichi, obv, obvSma, obvHasVolume, rocPeriod, roc,
+    stPeriod, supertrend, stDir, mfiPeriod, mfi, mfiHasVolume,
+    last, price, changePct, piv,
+    score, trendTone, trendText, vwapTone, vwapText, adxTone, adxText,
+    macdTone, macdText, rsiTone, rsiText, stochTone, stochText, willTone, willText,
+    cciTone, cciText, bbTone, bbText, sarTone, sarText, ichiTone, ichiText,
+    obvTone, obvText, rocTone, rocText, stTone, stText, mfiTone, mfiText,
+    dxyTone, dxyText, divergence, candlePattern, confluence, squeeze, ms,
+    normScore, overallTone, overallText,
+  };
+}
+
+function render(asset, raw, dxy, mtf, mtfMode, dxyTrend) {
+  const content = document.getElementById('content');
+  const meta = ASSETS[asset];
+  const priceDecimals = asset === 'BTC' ? 0 : 2;
+  if (!raw || raw.length < 60) {
+    content.innerHTML = '<div class="empty">بيانات غير كافية للتحليل</div>';
+    return;
+  }
+  const isScalp = tradeMode === 'scalp';
+  const snap = computeSnapshot(raw, isScalp, asset, dxyTrend);
+  const {
+    dates, closes, highs, lows, volumes,
+    trendFast, trendSlow, trendFastLabel, trendSlowLabel, ema50,
+    macdLine, signal, hist, rsiPeriod, rsi, k, d, bb, atrPeriod, atr, fibs,
+    adxPeriod, adx, plusDI, minusDI, willPeriod, willR, cciPeriod, cci,
+    vwap, hasVolume, sar, ichi, obv, obvSma, obvHasVolume, rocPeriod, roc,
+    stPeriod, supertrend, stDir, mfiPeriod, mfi, mfiHasVolume,
+    last, price, changePct, piv,
+    score, trendTone, trendText, vwapTone, vwapText, adxTone, adxText,
+    macdTone, macdText, rsiTone, rsiText, stochTone, stochText, willTone, willText,
+    cciTone, cciText, bbTone, bbText, sarTone, sarText, ichiTone, ichiText,
+    obvTone, obvText, rocTone, rocText, stTone, stText, mfiTone, mfiText,
+    dxyTone, dxyText, divergence, candlePattern, confluence, squeeze, ms,
+    normScore, overallTone, overallText,
+  } = snap;
+
+  const N = Math.min(120, closes.length);
+  const labels = dates.slice(-N).map(dt=>dt.slice(5));
+
+  const badgeHtml = (tone,text) => `<span class="badge ${tone}">${text}</span>`;
+
+  const mtfValid = mtf && mtfMode === tradeMode;
+  const rec = getRecommendation(price, atr[last], fibs, normScore, rsi[last], k[last], trendTone, macdTone, adx[last], isScalp, piv, mtfValid ? mtf : null, divergence, candlePattern, confluence, stTone, mfi[last], squeeze, ms);
+  const recTone = rec.action === 'buy' ? 'bull' : rec.action === 'sell' ? 'bear' : 'neutral';
+  const recLabel = rec.action === 'buy' ? 'شراء' : rec.action === 'sell' ? 'بيع' : 'انتظار';
+  const recIcon = rec.action === 'buy' ? '▲' : rec.action === 'sell' ? '▼' : '■';
+  const recColor = recTone === 'bull' ? '#34D399' : recTone === 'bear' ? '#F87171' : '#8A8D93';
+
+  const fundamentalsHtml = asset === 'XAU' ? `
+        <div class="fund-item"><div class="fund-title">مؤشر الدولار (DXY)</div><div class="fund-desc">علاقة عكسية مع الذهب غالباً — دولار قوي = ضغط هبوطي على الذهب.</div></div>
+        <div class="fund-item"><div class="fund-title">قرارات الفيدرالي وأسعار الفائدة</div><div class="fund-desc">رفع الفائدة يزيد كلفة الاحتفاظ بالذهب — راقب اجتماعات FOMC.</div></div>
+        <div class="fund-item"><div class="fund-title">التضخم (CPI)</div><div class="fund-desc">الذهب تحوّط تقليدي ضد التضخم — CPI أعلى من المتوقع يزيد الطلب عادةً.</div></div>
+        <div class="fund-item"><div class="fund-title">بيانات التوظيف (NFP)</div><div class="fund-desc">أول جمعة كل شهر — يسبب تقلب حاد لحظي بالذهب.</div></div>
+  ` : `
+        <div class="fund-item"><div class="fund-title">ارتباط بأسواق الأسهم (Nasdaq/S&P)</div><div class="fund-desc">البيتكوين صار يتحرك قريب من أصول المخاطرة — هبوط الأسهم غالباً يجرّه معه.</div></div>
+        <div class="fund-item"><div class="fund-title">تدفقات صناديق ETF الفورية</div><div class="fund-desc">تدفقات شرائية كبيرة بصناديق مثل IBIT تدعم السعر، والعكس صحيح.</div></div>
+        <div class="fund-item"><div class="fund-title">قرارات الفيدرالي وأسعار الفائدة</div><div class="fund-desc">تخفيض الفائدة يزيد السيولة ويدعم الأصول الخطرة زي الكريبتو.</div></div>
+        <div class="fund-item"><div class="fund-title">هيمنة البيتكوين ودورة الهالفينغ</div><div class="fund-desc">تغيّر BTC Dominance وقرب/بعد الهالفينغ يأثرون على الزخم طويل المدى.</div></div>
+  `;
+
+  content.innerHTML = `
+    <div class="grid2">
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <div class="label">السعر الحالي — ${meta.name}</div>
+            <div class="price-big">$${fmt(price,priceDecimals)}</div>
+            <div class="mono" style="font-size:13px; margin-top:4px; color:${changePct>=0?'#34D399':'#F87171'};">${changePct>=0?'+':''}${fmt(changePct)}%</div>
+          </div>
+          ${dxy!=null ? `<div style="text-align:left;"><div class="label">DXY (دولار)</div><div class="mono" style="font-size:16px; margin-top:4px;">${fmt(dxy)}</div></div>` : ''}
+        </div>
+        <div class="chart-wrap"><canvas id="priceChart"></canvas></div>
+        <div class="legend">
+          <span><span class="dot" style="background:${meta.color};"></span>السعر</span>
+          <span><span class="dot" style="background:#D9B85A;"></span>${trendFastLabel}</span>
+          <span><span class="dot" style="background:#F87171;"></span>${trendSlowLabel}</span>
+          <span><span class="dot" style="background:#F59E0B;"></span>SuperTrend</span>
+          ${isScalp ? '<span><span class="dot" style="background:#B8862E;"></span>VWAP</span>' : '<span><span class="dot" style="background:#3A3D42;"></span>Bollinger</span>'}
+        </div>
+      </div>
+      <div class="card" style="display:flex; flex-direction:column; align-items:center; justify-content:center;">
+        <canvas id="gaugeChart" width="220" height="130"></canvas>
+        <div class="mono" style="font-size:30px; margin-top:-10px; color:${overallTone==='bull'?'#34D399':overallTone==='bear'?'#F87171':'#C9A544'};">${normScore>0?'+':''}${normScore}</div>
+        <div class="label" style="margin-top:2px;">${overallText}</div>
+        ${badgeHtml(overallTone,'الإشارة المجمّعة')}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="label" style="margin-bottom:10px;">🔬 طبقة التأكيد (Confirmation Layer)</div>
+      <div class="grid3">
+        <div class="ind-card"><div class="label">الدايفرجنس</div><div style="font-size:20px; color:${divergence.tone==='bull'?'#34D399':divergence.tone==='bear'?'#F87171':'#8A8D93'}; margin-top:4px;">${divergence.tone==='bull'?'▲':divergence.tone==='bear'?'▼':'■'}</div><div class="ind-desc">${divergence.text}</div></div>
+        <div class="ind-card"><div class="label">نمط الشمعة</div><div style="font-size:20px; color:${candlePattern.tone==='bull'?'#34D399':candlePattern.tone==='bear'?'#F87171':'#8A8D93'}; margin-top:4px;">${candlePattern.tone==='bull'?'▲':candlePattern.tone==='bear'?'▼':'■'}</div><div class="ind-desc">${candlePattern.text}</div></div>
+        <div class="ind-card"><div class="label">تجمع المستويات</div><div style="font-size:20px; color:${confluence.hit?meta.color:'#8A8D93'}; margin-top:4px;">${confluence.hit?'★':'—'}</div><div class="ind-desc">${confluence.text}</div></div>
+      </div>
+      <div class="grid3" style="margin-top:12px;">
+        <div class="ind-card" style="grid-column: span 3;">
+          <div class="label">🏗️ هيكل السوق (Market Structure)</div>
+          <div style="display:flex; align-items:center; gap:10px; margin-top:6px;">
+            <span style="font-size:20px; color:${ms.tone==='bull'?'#34D399':ms.tone==='bear'?'#F87171':'#8A8D93'};">${ms.event==='BOS'?'⚡':ms.event==='CHoCH'?'🔄':'■'}</span>
+            <span class="mono" style="font-size:13px;">${ms.structure==='bullish'?'هيكل صاعد':ms.structure==='bearish'?'هيكل هابط':'هيكل غير واضح'}${ms.event?' — '+ms.event:''}</span>
+          </div>
+          <div class="ind-desc" style="margin-top:4px;">${ms.text}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+        <div class="label">🧪 اختبار على البيانات التاريخية (Backtest)</div>
+        <button style="padding:8px 14px; font-size:12px;" onclick="runBacktestUI()">شغّل الباكتست</button>
+      </div>
+      <div class="footnote" style="text-align:right; margin-top:6px;">
+        يطبّق نفس منطق التوصية الأساسي (اتجاه + MACD + RSI + Stochastic + Williams %R + CCI + Bollinger + ADX)
+        على كل البيانات المجلوبة (${raw.length} شمعة) ويحسب النتيجة الحقيقية — بدون توافق الفريمات أو DXY/MFI
+        (تلك تحتاج بيانات لحظية ما تتوفر تاريخياً بنفس الطريقة).
+      </div>
+      <div id="backtestResults" style="margin-top:12px;"></div>
+    </div>
+
+    <div class="card">
+      <div class="label" style="margin-bottom:10px;">🔀 توافق الفريمات (Multi-Timeframe)</div>
+      ${mtf ? `
+        ${!mtfValid ? '<div class="footnote" style="margin-bottom:8px;">⚠️ هذي النتيجة من وضع تداول مختلف — اضغط "جيب التحليل" حتى تحدّثها لهذا الوضع</div>' : ''}
+        <div class="grid3">
+          ${mtf.map(tf => {
+            const tone = tf.ok ? tf.tone : 'neutral';
+            const icon = tone==='bull' ? '▲' : tone==='bear' ? '▼' : '■';
+            const color = tone==='bull' ? '#34D399' : tone==='bear' ? '#F87171' : '#8A8D93';
+            return `<div class="ind-card" style="text-align:center;">
+              <div class="label">${tf.label}</div>
+              <div style="font-size:22px; color:${color}; margin-top:4px;">${icon}</div>
+              <div class="ind-desc">${tf.ok ? tf.text : 'تعذر الجلب'}</div>
+            </div>`;
+          }).join('')}
+        </div>
+      ` : `<div class="footnote">اضغط "جيب التحليل" حتى يجيب الأداة اتجاه الفريمات الثلاثة (${TF_SETS[tradeMode].map(t=>t.label).join('، ')}) ويقارنهم مع بعض.</div>`}
+    </div>
+
+    <div class="card" style="border-color:${recColor}55;">
+      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="width:52px; height:52px; border-radius:14px; background:${recColor}22; display:flex; align-items:center; justify-content:center; font-size:24px; color:${recColor};">${recIcon}</div>
+          <div>
+            <div class="label">التوصية الحالية — ${meta.name} ${isScalp ? '<span style="color:#B8862E;">(وضع سكالب ⚡)</span>' : ''}</div>
+            <div class="display" style="font-size:24px; font-weight:700; color:${recColor}; margin-top:2px;">${recLabel}</div>
+          </div>
+        </div>
+        <span class="badge ${recTone}">ثقة الإشارة: ${rec.confidence}</span>
+      </div>
+      <ul style="margin:14px 0 0; padding-right:18px; font-size:13px; color:#B9BBC0; line-height:1.7;">
+        ${rec.reasons.map(r=>`<li>${r}</li>`).join('')}
+      </ul>
+      ${rec.action !== 'wait' ? `
+      <div class="grid3" style="margin-top:14px;">
+        <div class="ind-card"><div class="label">الدخول</div><div class="ind-value">$${fmt(rec.entry,priceDecimals)}</div></div>
+        <div class="ind-card"><div class="label">وقف الخسارة</div><div class="ind-value" style="color:#F87171;">$${fmt(rec.stop,priceDecimals)}</div></div>
+        <div class="ind-card"><div class="label">الهدف</div><div class="ind-value" style="color:#34D399;">$${fmt(rec.target,priceDecimals)}</div><div class="ind-sub">R:R ≈ ${rec.rr!=null?fmt(rec.rr,1):'—'}</div></div>
+      </div>` : ''}
+      <div class="footnote" style="margin-top:12px;">هذي إشارة آلية مبنية على المؤشرات الفنية فقط — مو توصية استثمارية شخصية، وقرار الدخول والخروج مسؤوليتك. ملاحظة: "ثقة الإشارة" مقياس داخلي لعدد المؤشرات المتفقة مع بعضها — مو نسبة احتمال إحصائية (يعني "قوية جداً" ما تعني نجاح 90%)؛ للنسبة الحقيقية استخدم زر الباكتست تحت.</div>
+    </div>
+
+    <div class="section-title"><span class="label">📈 مؤشرات الاتجاه (Trend)</span></div>
+    <div class="grid4">
+      <div class="ind-card"><div class="label">${trendFastLabel} / ${trendSlowLabel}</div><div class="ind-value">${fmt(trendFast[last],priceDecimals)} / ${fmt(trendSlow[last],priceDecimals)}</div><div class="ind-desc">${trendText}</div></div>
+      <div class="ind-card"><div class="label">MACD</div><div class="ind-value">${fmt(macdLine[last],3)}</div><div class="ind-sub">Signal: ${fmt(signal[last],3)}</div><div class="ind-desc">${macdText}</div></div>
+      <div class="ind-card"><div class="label">ADX (${adxPeriod})</div><div class="ind-value">${fmt(adx[last],1)}</div><div class="ind-sub">+DI ${fmt(plusDI[last],1)} / -DI ${fmt(minusDI[last],1)}</div><div class="ind-desc">${adxText}</div></div>
+      <div class="ind-card"><div class="label">Parabolic SAR</div><div class="ind-value">${fmt(sar[last],priceDecimals)}</div><div class="ind-desc">${sarText}</div></div>
+      <div class="ind-card"><div class="label">Ichimoku</div><div class="ind-value" style="font-size:16px;">Tenkan ${fmt(ichi.tenkan[last],priceDecimals)}</div><div class="ind-sub">Kijun ${fmt(ichi.kijun[last],priceDecimals)}</div><div class="ind-desc">${ichiText}</div></div>
+      <div class="ind-card"><div class="label">SuperTrend (${stPeriod})</div><div class="ind-value">${fmt(supertrend[last],priceDecimals)}</div><div class="ind-desc">${stText}</div></div>
+      ${asset==='XAU' && dxyTrend ? `<div class="ind-card"><div class="label">DXY (الدولار)</div><div class="ind-value" style="font-size:16px;">${fmt(dxy)}</div><div class="ind-desc">${dxyText}</div></div>` : ''}
+    </div>
+
+    <div class="section-title" style="margin-top:16px;"><span class="label">⚡ مؤشرات الزخم (Momentum)</span></div>
+    <div class="grid4">
+      <div class="ind-card"><div class="label">RSI (${rsiPeriod})</div><div class="ind-value">${fmt(rsi[last],1)}</div><div class="ind-desc">${rsiText}</div></div>
+      <div class="ind-card"><div class="label">Stochastic${isScalp?' سريع':''}</div><div class="ind-value">${fmt(k[last],1)}</div><div class="ind-sub">%D: ${fmt(d[last],1)}</div><div class="ind-desc">${stochText}</div></div>
+      <div class="ind-card"><div class="label">Williams %R (${willPeriod})</div><div class="ind-value">${fmt(willR[last],1)}</div><div class="ind-desc">${willText}</div></div>
+      <div class="ind-card"><div class="label">CCI (${cciPeriod})</div><div class="ind-value">${fmt(cci[last],1)}</div><div class="ind-desc">${cciText}</div></div>
+      <div class="ind-card"><div class="label">ROC (${rocPeriod})</div><div class="ind-value">${fmt(roc[last],2)}%</div><div class="ind-desc">${rocText}</div></div>
+      <div class="ind-card"><div class="label">MFI (${mfiPeriod})</div><div class="ind-value">${fmt(mfi[last],1)}</div><div class="ind-desc">${mfiText}</div></div>
+    </div>
+
+    <div class="section-title" style="margin-top:16px;"><span class="label">📊 التذبذب والحجم (Volatility & Volume)</span></div>
+    <div class="grid4">
+      <div class="ind-card"><div class="label">Bollinger Bands</div><div class="ind-value">${fmt(bb.lower[last],0)} – ${fmt(bb.upper[last],0)}</div><div class="ind-sub">الوسط: ${fmt(bb.mid[last],0)}</div><div class="ind-desc">${bbText}</div></div>
+      <div class="ind-card"><div class="label">ATR (${atrPeriod})</div><div class="ind-value">${fmt(atr[last],2)}</div><div class="ind-sub">وقف مقترح: ${fmt(atr[last]*(isScalp?0.8:1.5),2)}$</div><div class="ind-desc">مدى التذبذب — يستخدم لتحديد وقف الخسارة</div></div>
+      <div class="ind-card"><div class="label">OBV</div><div class="ind-value" style="font-size:16px;">${fmt(obv[last],0)}</div><div class="ind-desc">${obvText}</div></div>
+      <div class="ind-card"><div class="label">انضغاط التذبذب</div><div class="ind-value" style="font-size:18px; color:${squeeze.squeeze?'#F59E0B':'#8A8D93'};">${squeeze.squeeze?'⚠️ نعم':'لا'}</div><div class="ind-desc">${squeeze.text}</div></div>
+      ${isScalp ? `<div class="ind-card"><div class="label">VWAP</div><div class="ind-value">${fmt(vwap[last],priceDecimals)}</div><div class="ind-desc">${vwapText}</div></div>` : ''}
+    </div>
+
+    <div class="section-title" style="margin-top:16px;"><span class="label">🎯 مستويات الدعم والمقاومة</span></div>
+    <div class="grid4">
+      <div class="ind-card">
+        <div class="label">Pivot Points</div>
+        <div class="ind-value" style="font-size:16px;">P: ${fmt(piv.pp,priceDecimals)}</div>
+        <div class="ind-sub">R1 ${fmt(piv.r1,0)} · S1 ${fmt(piv.s1,0)}</div>
+        <div class="ind-desc">مبني على آخر شمعة مكتملة</div>
+      </div>
+    </div>
+
+    <div class="section-title" style="margin-top:16px;"><span class="label">رسوم بيانية — الاتجاه</span></div>
+    <div class="grid3">
+      <div class="card"><div class="label">MACD</div><div class="mini-wrap"><canvas id="macdChart"></canvas></div></div>
+      <div class="card"><div class="label">ADX / +DI / -DI</div><div class="mini-wrap"><canvas id="adxChart"></canvas></div></div>
+      <div class="card"><div class="label">OBV مقابل متوسطه</div><div class="mini-wrap"><canvas id="obvChart"></canvas></div></div>
+    </div>
+
+    <div class="section-title" style="margin-top:16px;"><span class="label">رسوم بيانية — الزخم</span></div>
+    <div class="grid3">
+      <div class="card"><div class="label">RSI (${rsiPeriod})</div><div class="mini-wrap"><canvas id="rsiChart"></canvas></div></div>
+      <div class="card"><div class="label">Stochastic</div><div class="mini-wrap"><canvas id="stochChart"></canvas></div></div>
+      <div class="card"><div class="label">Williams %R</div><div class="mini-wrap"><canvas id="willChart"></canvas></div></div>
+    </div>
+    <div class="grid3">
+      <div class="card"><div class="label">CCI (${cciPeriod})</div><div class="mini-wrap"><canvas id="cciChart"></canvas></div></div>
+      <div class="card"><div class="label">ROC (${rocPeriod})</div><div class="mini-wrap"><canvas id="rocChart"></canvas></div></div>
+      <div class="card"><div class="label">MFI (${mfiPeriod})</div><div class="mini-wrap"><canvas id="mfiChart"></canvas></div></div>
+    </div>
+
+    <div class="card">
+      <div class="label" style="margin-bottom:10px;">مستويات الدعم/المقاومة (Pivot Points)</div>
+      <div class="piv-grid">
+        ${['s3','s2','s1','pp','r1','r2','r3'].map(key=>{
+          const val = piv[key];
+          const isPP = key==='pp';
+          return `<div class="piv-item" style="${isPP?'border-color:'+meta.color+';background:'+meta.color+'1a;':''}"><div class="mono" style="font-size:10px; color:#8A8D93;">${key.toUpperCase()}</div><div class="mono" style="font-size:13px; margin-top:3px;">${fmt(val,0)}</div></div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="label" style="margin-bottom:10px;">مستويات فيبوناتشي (آخر ${Math.min(90,raw.length)} شمعة)</div>
+      <div class="fib-grid">
+        ${fibs.map(f=>{
+          const near = Math.abs(price-f.price)/price < 0.004;
+          return `<div class="fib-item ${near?'fib-near':''}"><div class="mono" style="font-size:10px; color:#8A8D93;">${(f.ratio*100).toFixed(1)}%</div><div class="mono" style="font-size:14px; margin-top:3px;">${fmt(f.price,0)}</div></div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="label" style="margin-bottom:10px;">⚡ عوامل أساسية تأثر على ${meta.name}</div>
+      <div class="fund-grid">
+        ${fundamentalsHtml}
+      </div>
+      <div class="footnote">تابع هذي العوامل من تقويم اقتصادي منفصل قبل قرارات التداول.</div>
+    </div>
+
+    <div class="footnote">هذي أدوات تحليل فني تعليمية وما تعتبر نصيحة استثمارية. البيانات من Twelve Data وقد تتأخر حسب باقتك المجانية.</div>
+  `;
+
+  destroyCharts();
+
+  const gridColor = '#1C1E22', tickColor = '#6B6E74';
+  const baseOpts = {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{display:false} },
+    scales:{
+      x:{ ticks:{ color:tickColor, font:{size:9}, maxTicksLimit:6 }, grid:{ color:gridColor } },
+      y:{ ticks:{ color:tickColor, font:{size:9} }, grid:{ color:gridColor } }
+    }
+  };
+  const miniOpts = { ...baseOpts, scales:{ x:{display:false}, y:{ ticks:{color:tickColor,font:{size:8}}, grid:{color:gridColor} } } };
+
+  charts.price = new Chart(document.getElementById('priceChart'), {
+    type:'line',
+    data:{ labels, datasets:[
+      { label:'Close', data: closes.slice(-N), borderColor:meta.color, borderWidth:2, pointRadius:0 },
+      { label: trendFastLabel, data: trendFast.slice(-N), borderColor:'#D9B85A', borderWidth:1.3, pointRadius:0 },
+      { label: trendSlowLabel, data: trendSlow.slice(-N), borderColor:'#F87171', borderWidth:1.3, pointRadius:0 },
+      { label:'SAR', data: sar.slice(-N), borderColor:'#34D399', borderWidth:0, pointRadius:1.5, pointBackgroundColor:'#34D399', showLine:false },
+      { label:'SuperTrend', data: supertrend.slice(-N), borderColor:'#F59E0B', borderWidth:1.4, pointRadius:0, borderDash:[2,2] },
+      ...(isScalp && vwap ? [{ label:'VWAP', data: vwap.slice(-N), borderColor:'#B8862E', borderWidth:1.5, pointRadius:0, borderDash:[5,2] }] : []),
+      { label:'BB Upper', data: bb.upper.slice(-N), borderColor:'#3A3D42', borderWidth:1, borderDash:[3,3], pointRadius:0 },
+      { label:'BB Lower', data: bb.lower.slice(-N), borderColor:'#3A3D42', borderWidth:1, borderDash:[3,3], pointRadius:0 },
+    ]},
+    options: baseOpts
+  });
+
+  charts.macd = new Chart(document.getElementById('macdChart'), {
+    type:'line',
+    data:{ labels, datasets:[
+      { data: macdLine.slice(-N), borderColor:'#D9B85A', borderWidth:1.5, pointRadius:0 },
+      { data: signal.slice(-N), borderColor:'#F87171', borderWidth:1.5, pointRadius:0 },
+    ]},
+    options: miniOpts
+  });
+
+  charts.rsi = new Chart(document.getElementById('rsiChart'), {
+    type:'line',
+    data:{ labels, datasets:[ { data: rsi.slice(-N), borderColor:meta.color, borderWidth:1.5, pointRadius:0 } ]},
+    options: { ...baseOpts, scales:{ x:{display:false}, y:{ min:0, max:100, ticks:{color:tickColor,font:{size:8}}, grid:{color:gridColor} } } }
+  });
+
+  charts.stoch = new Chart(document.getElementById('stochChart'), {
+    type:'line',
+    data:{ labels, datasets:[
+      { data: k.slice(-N), borderColor:'#D9B85A', borderWidth:1.5, pointRadius:0 },
+      { data: d.slice(-N), borderColor:meta.color, borderWidth:1.5, pointRadius:0 },
+    ]},
+    options: { ...baseOpts, scales:{ x:{display:false}, y:{ min:0, max:100, ticks:{color:tickColor,font:{size:8}}, grid:{color:gridColor} } } }
+  });
+
+  charts.adx = new Chart(document.getElementById('adxChart'), {
+    type:'line',
+    data:{ labels, datasets:[
+      { data: adx.slice(-N), borderColor:'#EDEBE6', borderWidth:1.8, pointRadius:0 },
+      { data: plusDI.slice(-N), borderColor:'#34D399', borderWidth:1.2, pointRadius:0 },
+      { data: minusDI.slice(-N), borderColor:'#F87171', borderWidth:1.2, pointRadius:0 },
+    ]},
+    options: miniOpts
+  });
+
+  charts.will = new Chart(document.getElementById('willChart'), {
+    type:'line',
+    data:{ labels, datasets:[ { data: willR.slice(-N), borderColor:meta.color, borderWidth:1.5, pointRadius:0 } ]},
+    options: { ...baseOpts, scales:{ x:{display:false}, y:{ min:-100, max:0, ticks:{color:tickColor,font:{size:8}}, grid:{color:gridColor} } } }
+  });
+
+  charts.cci = new Chart(document.getElementById('cciChart'), {
+    type:'line',
+    data:{ labels, datasets:[ { data: cci.slice(-N), borderColor:'#D9B85A', borderWidth:1.5, pointRadius:0 } ]},
+    options: miniOpts
+  });
+
+  charts.obv = new Chart(document.getElementById('obvChart'), {
+    type:'line',
+    data:{ labels, datasets:[
+      { data: obv.slice(-N), borderColor:meta.color, borderWidth:1.6, pointRadius:0 },
+      { data: obvSma.slice(-N), borderColor:'#8A8D93', borderWidth:1.2, pointRadius:0, borderDash:[3,3] },
+    ]},
+    options: miniOpts
+  });
+
+  charts.roc = new Chart(document.getElementById('rocChart'), {
+    type:'line',
+    data:{ labels, datasets:[ { data: roc.slice(-N), borderColor:'#D9B85A', borderWidth:1.5, pointRadius:0 } ]},
+    options: miniOpts
+  });
+
+  charts.mfi = new Chart(document.getElementById('mfiChart'), {
+    type:'line',
+    data:{ labels, datasets:[ { data: mfi.slice(-N), borderColor:meta.color, borderWidth:1.5, pointRadius:0 } ]},
+    options: { ...baseOpts, scales:{ x:{display:false}, y:{ min:0, max:100, ticks:{color:tickColor,font:{size:8}}, grid:{color:gridColor} } } }
+  });
+
+  drawGauge(normScore, overallTone);
+}
+
+function runBacktestUI() {
+  const box = document.getElementById('backtestResults');
+  if (!box) return;
+  const c = cache[activeAsset];
+  if (!c || !c.raw) { box.innerHTML = '<div class="error">ما فيه بيانات محمّلة لهذا الأصل بعد.</div>'; return; }
+
+  const isScalp = tradeMode === 'scalp';
+  const lookahead = isScalp ? 30 : 20;
+  box.innerHTML = '<div class="footnote">جاري الحساب...</div>';
+
+  const res = runBacktest(c.raw, isScalp, lookahead, activeAsset);
+  if (res.error) { box.innerHTML = `<div class="error">⚠️ ${res.error}</div>`; return; }
+
+  const wrColor = res.winRate==null ? '#8A8D93' : res.winRate>=55 ? '#34D399' : res.winRate>=45 ? '#C9A544' : '#F87171';
+
+  const INTERVAL_MINUTES = { '1min':1, '5min':5, '15min':15, '30min':30, '1h':60, '4h':240, '1day':1440 };
+  const barMin = INTERVAL_MINUTES[c.interval] || null;
+  const fmtDuration = (bars) => {
+    if (bars==null || !barMin) return bars!=null ? `${fmt(bars,1)} شمعة` : '—';
+    const totalMin = bars * barMin;
+    if (totalMin < 60) return `${fmt(bars,1)} شمعة (≈ ${Math.round(totalMin)} دقيقة)`;
+    if (totalMin < 1440) return `${fmt(bars,1)} شمعة (≈ ${fmt(totalMin/60,1)} ساعة)`;
+    return `${fmt(bars,1)} شمعة (≈ ${fmt(totalMin/1440,1)} يوم)`;
+  };
+
+  box.innerHTML = `
+    <div class="grid4">
+      <div class="ind-card"><div class="label">عدد الإشارات</div><div class="ind-value">${res.totalSignals}</div><div class="ind-desc">على ${res.barsUsed} شمعة</div></div>
+      <div class="ind-card"><div class="label">نسبة النجاح</div><div class="ind-value" style="color:${wrColor};">${res.winRate!=null?fmt(res.winRate,1)+'%':'—'}</div><div class="ind-sub">${res.wins} ربح / ${res.losses} خسارة</div></div>
+      <div class="ind-card"><div class="label">صفقات شراء</div><div class="ind-value">${res.buyCount}</div><div class="ind-sub">نجاح: ${res.buyWinRate!=null?fmt(res.buyWinRate,1)+'%':'—'}</div></div>
+      <div class="ind-card"><div class="label">صفقات بيع</div><div class="ind-value">${res.sellCount}</div><div class="ind-sub">نجاح: ${res.sellWinRate!=null?fmt(res.sellWinRate,1)+'%':'—'}</div></div>
+    </div>
+    <div class="section-title" style="margin-top:14px;"><span class="label">⏱️ كم تاخذ الصفقة وقت توصل هدفها؟</span></div>
+    <div class="grid3">
+      <div class="ind-card"><div class="label">متوسط الكل</div><div class="ind-value" style="font-size:15px;">${fmtDuration(res.avgBarsAll)}</div></div>
+      <div class="ind-card"><div class="label">متوسط الصفقات الرابحة</div><div class="ind-value" style="font-size:15px; color:#34D399;">${fmtDuration(res.avgBarsWin)}</div></div>
+      <div class="ind-card"><div class="label">متوسط الصفقات الخاسرة</div><div class="ind-value" style="font-size:15px; color:#F87171;">${fmtDuration(res.avgBarsLoss)}</div></div>
+    </div>
+    <div class="footnote" style="margin-top:10px;">
+      ${res.timeouts>0 ? `${res.timeouts} إشارة ما توصلت لا للهدف ولا للوقف خلال فترة المتابعة (${lookahead} شمعة) — مستبعدة من نسبة النجاح.<br>` : ''}
+      عيّنة: ${res.totalSignals} إشارة على ${res.barsUsed} شمعة بس — عيّنة صغيرة نسبياً، خصوصاً بفريمات الدقايق. النسبة هذي مؤشر أولي مو ضمان أداء مستقبلي، ولا تشمل عمولة أو سبريد أو انزلاق سعري (slippage). حالة تعادل الشمعة نفسها بين الهدف والوقف افتُرضت خسارة دايماً (محافظ، أسوأ احتمال).
+    </div>
+  `;
+}
+
+function drawGauge(score, tone) {
+  const canvas = document.getElementById('gaugeChart');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,220,130);
+  const cx=110, cy=115, r=95;
+  const toneColor = tone==='bull' ? '#34D399' : tone==='bear' ? '#F87171' : '#C9A544';
+
+  const grad = ctx.createLinearGradient(15,0,205,0);
+  grad.addColorStop(0,'#F87171'); grad.addColorStop(0.5,'#C9A544'); grad.addColorStop(1,'#34D399');
+  ctx.beginPath();
+  ctx.arc(cx,cy,r,Math.PI,2*Math.PI);
+  ctx.strokeStyle = grad; ctx.lineWidth = 10; ctx.lineCap='round'; ctx.globalAlpha=0.85;
+  ctx.stroke(); ctx.globalAlpha=1;
+
+  [-90,-45,0,45,90].forEach(a=>{
+    const rad = a*Math.PI/180;
+    const x1 = cx + Math.sin(rad)*82, y1 = cy - Math.cos(rad)*82;
+    const x2 = cx + Math.sin(rad)*95, y2 = cy - Math.cos(rad)*95;
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2);
+    ctx.strokeStyle = '#3A3D42'; ctx.lineWidth=2; ctx.stroke();
+  });
+
+  const clamped = Math.max(-100, Math.min(100, score));
+  const angle = (clamped/100)*90 * Math.PI/180;
+  ctx.save();
+  ctx.translate(cx,cy); ctx.rotate(angle);
+  ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,-81);
+  ctx.strokeStyle = toneColor; ctx.lineWidth=3; ctx.lineCap='round'; ctx.stroke();
+  ctx.restore();
+  ctx.beginPath(); ctx.arc(cx,cy,7,0,2*Math.PI); ctx.fillStyle=toneColor; ctx.fill();
+
+  ctx.font = "9px 'IBM Plex Mono', monospace"; ctx.fillStyle = '#6B6E74';
+  ctx.fillText('BEARISH', 20, 128);
+  ctx.fillText('BULLISH', 168, 128);
+}
+
+// ---------- ambient calm background music (generative, Web Audio API) ----------
+let audioCtx = null, musicOn = false, musicNodes = [], musicTimer = null;
+const PENTATONIC = [220.00, 246.94, 293.66, 329.63, 392.00, 440.00, 493.88, 587.33]; // A minor pentatonic-ish, calm
+
+function playNote(freq, startTime, duration, vol) {
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.value = 1200;
+  osc.type = 'sine';
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(0, startTime);
+  gain.gain.linearRampToValueAtTime(vol, startTime + 0.4);
+  gain.gain.linearRampToValueAtTime(0, startTime + duration);
+  osc.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
+  osc.start(startTime); osc.stop(startTime + duration + 0.1);
+  musicNodes.push(osc);
+}
+
+function scheduleAmbientLoop() {
+  if (!musicOn || !audioCtx) return;
+  const now = audioCtx.currentTime;
+  const note = PENTATONIC[Math.floor(Math.random()*PENTATONIC.length)];
+  const octaveDown = Math.random() > 0.6;
+  playNote(octaveDown ? note/2 : note, now + 0.05, 3.2, 0.045);
+  if (Math.random() > 0.5) playNote(note * 1.5, now + 1.2, 2.4, 0.02); // soft harmonic
+  musicTimer = setTimeout(scheduleAmbientLoop, 2600 + Math.random()*1800);
+}
+
+window.toggleMusic = function() {
+  const btn = document.getElementById('musicToggle');
+  if (!musicOn) {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    audioCtx.resume();
+    musicOn = true;
+    if (btn) btn.textContent = '🔊';
+    scheduleAmbientLoop();
+  } else {
+    musicOn = false;
+    if (btn) btn.textContent = '🔇';
+    if (musicTimer) clearTimeout(musicTimer);
+  }
+};
+
+// ---------- intro splash: calm fade dismiss ----------
+(function initIntro(){
+  window.dismissIntro = function() {
+    const el = document.getElementById('introScreen');
+    if (!el) return;
+    el.classList.add('hidden');
+    setTimeout(() => { el.style.display = 'none'; }, 1050);
+  };
+  setTimeout(() => { if (typeof dismissIntro === 'function') dismissIntro(); }, 3000);
+})();
+</script>
+</body>
+</html>
